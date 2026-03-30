@@ -82,6 +82,7 @@ coverage.xml
 .env
 .env.*
 *.pem
+conda_env/
 *.key
 *.crt
 *.secret
