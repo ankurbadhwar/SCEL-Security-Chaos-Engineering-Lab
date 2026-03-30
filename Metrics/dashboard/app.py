@@ -3,7 +3,14 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from metrics.scoring import calculate_resilience
+import sys
+import os
+
+# 1. Tell Python to look one folder up (in the Metrics folder)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# 2. Import directly from your scoring.py file
+from scoring import calculate_resilience
 
 app = Flask(__name__)
 

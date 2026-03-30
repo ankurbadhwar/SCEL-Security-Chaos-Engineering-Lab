@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCEL Metrics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-300 font-sans antialiased min-h-screen">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <div class="flex justify-between items-end mb-8 border-b border-slate-700 pb-6">
+            <div>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight">Chaos Metrics</h1>
+                <p class="text-sm text-slate-400 mt-2 tracking-wide uppercase">Security Chaos Engineering Lab (SCEL)</p>
+            </div>
+
+            <div id="status-badge" class="flex items-center space-x-2 bg-slate-800 px-4 py-2 rounded-full shadow-lg border border-slate-600">
+                <span class="text-sm font-medium text-slate-400">Status:</span>
+                <span id="status-indicator" class="text-yellow-500 font-bold text-sm flex items-center">
+                    Connecting...
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+                    <span class="mr-2">🛡️</span> Baseline State (Before)
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">System Resilience</span>
+                        <span class="text-emerald-400 font-mono text-lg font-bold">98.5%</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">Active Vulnerabilities</span>
+                        <span class="text-slate-300 font-mono text-lg">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Target Node Health</span>
+                        <span class="text-emerald-400 font-mono text-sm px-2 py-1 bg-emerald-500/10 rounded">Optimal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                <h2 class="text-xl font-bold text-rose-400 mb-4 flex items-center">
+                    <span class="mr-2">🔥</span> Chaos Impact (After)
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">System Resilience</span>
+                        <span class="text-rose-400 font-mono text-lg font-bold drop-shadow-md">64.2%</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-slate-400">Exploited Vulnerabilities</span>
+                        <span class="text-rose-400 font-mono text-lg font-bold">2</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Target Node Health</span>
+                        <span class="text-amber-400 font-mono text-sm px-2 py-1 bg-amber-500/10 rounded">Degraded</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="text-lg font-semibold text-white mb-4">Live Experiment Log</h3>
+        <div class="bg-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-700">
+                    <thead class="bg-slate-900/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Experiment ID</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Node</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Blast Radius</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Time to Exploit</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metrics-table-body" class="bg-slate-800 divide-y divide-slate-700">
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-slate-500 animate-pulse">
+                                Awaiting orchestrator telemetry...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mockChaosData = [
+            { id: 'SCEL-001', target: 'auth-service-node', blastRadius: 'Isolated', status: 'Running', timeToExploit: 'N/A' },
+            { id: 'SCEL-002', target: 'payment-gateway', blastRadius: 'High', status: 'Mitigated', timeToExploit: '14.2s' },
+            { id: 'SCEL-003', target: 'user-db-cluster', blastRadius: 'Low', status: 'Passed', timeToExploit: 'Timeout (Safe)' },
+            { id: 'SCEL-004', target: 'kafka-queue', blastRadius: 'Medium', status: 'Failed', timeToExploit: '2.1s' }
+        ];
+
+        function renderTable(data) {
+            const tbody = document.getElementById('metrics-table-body');
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                // Dark mode specific colors for badges
+                const blastRadiusColor = row.blastRadius === 'High' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                                         row.blastRadius === 'Medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                         'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+
+                const statusColor = row.status === 'Running' ? 'text-blue-400' :
+                                    row.status === 'Passed' ? 'text-emerald-400' :
+                                    row.status === 'Mitigated' ? 'text-purple-400' :
+                                    'text-rose-400';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-700/50 transition-colors duration-150';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">${row.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-cyan-400">${row.target}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded ${blastRadiusColor}">
+                            ${row.blastRadius}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${row.timeToExploit}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold ${statusColor} flex items-center">
+                        ${row.status === 'Running' ? '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' : ''}
+                        ${row.status}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStatus(state) {
+            const indicator = document.getElementById('status-indicator');
+            if (state === 'live') {
+                indicator.innerHTML = '<span class="w-2.5 h-2.5 bg-emerald-500 rounded-full mr-2 animate-pulse-slow shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> <span class="text-emerald-400">Live Telemetry</span>';
+            } else if (state === 'mock') {
+                indicator.innerHTML = '<span class="w-2.5 h-2.5 bg-orange-500 rounded-full mr-2 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span> <span class="text-orange-400">Mock Mode</span>';
+            }
+        }
+
+        async function fetchMetrics() {
+            try {
+                // Point this to your backend when ready
+                const response = await fetch('http://localhost:9999/dummy-url-to-force-fail');
+                if (!response.ok) throw new Error('API down');
+
+                const liveData = await response.json();
+                renderTable(liveData);
+                updateStatus('live');
+            } catch (error) {
+                console.warn('Orchestrator not found, using mock data.');
+                renderTable(mockChaosData);
+                updateStatus('mock');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchMetrics);
+    </script>
+</body>
+</html>
