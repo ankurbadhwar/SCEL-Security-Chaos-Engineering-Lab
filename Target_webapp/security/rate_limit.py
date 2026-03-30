@@ -1,6 +1,5 @@
 import time
 import app.config as config
-from app.config import RATE_LIMIT_ENABLED
 
 login_attempts = {}
 

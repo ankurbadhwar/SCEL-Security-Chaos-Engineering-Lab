@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import app.config as config
 from flask import redirect, request
+from app.security.rate_limit import login_attempts
 
 toggle_bp = Blueprint('toggle', __name__)
 
@@ -15,6 +16,7 @@ def toggle():
         return jsonify({"message": f"{control} set to {value}"})
 
     return jsonify({"error": "Invalid control"}), 400
+
 @toggle_bp.route('/toggle-ui', methods=['POST'])
 def toggle_ui():
     control = request.form.get("control")
@@ -23,3 +25,18 @@ def toggle_ui():
     setattr(config, control, not current)
 
     return redirect(request.referrer)
+
+@toggle_bp.route('/reset-rate-limit', methods=['POST'])
+def reset_rate_limit():
+    """Clear all stored login attempts so rate limiting starts fresh."""
+    login_attempts.clear()
+    return jsonify({"message": "Rate limit counters cleared"})
+
+@toggle_bp.route('/status', methods=['GET'])
+def status():
+    """Return current state of all security controls."""
+    return jsonify({
+        "RATE_LIMIT_ENABLED": config.RATE_LIMIT_ENABLED,
+        "RBAC_ENABLED": config.RBAC_ENABLED,
+        "INPUT_SANITIZATION_ENABLED": config.INPUT_SANITIZATION_ENABLED,
+    })
