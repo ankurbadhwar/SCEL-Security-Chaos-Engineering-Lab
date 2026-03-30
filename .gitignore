@@ -1,1 +1,156 @@
+# ========================================
+# Python
+# ========================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========================================
+# Virtual Environments
+# ========================================
 venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ========================================
+# Flask / Web App
+# ========================================
+
+# Instance folder (often contains secrets / config overrides)
+instance/
+
+# Flask session files
+flask_session/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================================
+# Testing & Coverage
+# ========================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# ========================================
+# Environments & Secrets
+# ========================================
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.secret
+secret_key.txt
+
+# ========================================
+# IDE / Editor
+# ========================================
+
+# VSCode
+.vscode/
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+\#*\#
+.#*
+
+# ========================================
+# OS Generated
+# ========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ========================================
+# Logs & Runtime
+# ========================================
+*.log
+logs/
+*.pid
+*.sock
+
+# ========================================
+# Docker (if used)
+# ========================================
+docker-compose.override.yml
+.docker/
+
+# ========================================
+# Misc
+# ========================================
+*.bak
+*.tmp
+*.temp
+.cache/
