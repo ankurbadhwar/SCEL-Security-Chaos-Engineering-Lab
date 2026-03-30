@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SCEL Metrics Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background-color: #1e1e1e; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
+        h1, h2 { color: #ffffff; }
+        p { color: #aaaaaa; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background-color: #252525; border-radius: 5px; overflow: hidden; }
+        th, td { padding: 14px; border-bottom: 1px solid #333; text-align: left; }
+        th { background-color: #1f2937; color: #ffffff; font-weight: bold; text-transform: uppercase; font-size: 0.9em; border-bottom: 2px solid #444;}
+        td { color: #cccccc; }
+        .score-high { color: #4ade80; font-weight: bold; } 
+        .score-low { color: #f87171; font-weight: bold; } 
+        .success-true { color: #f87171; font-weight: bold; } 
+        .success-false { color: #4ade80; font-weight: bold; }
+        tr:hover { background-color: #2a2a2a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ SCEL Resilience Dashboard</h1>
+        <p>Measuring systemic security degradation.</p>
+
+        <h2>Phase 1: Before Chaos (Baseline)</h2>
+        <table>
+            <tr><th>Attack Type</th><th>TTE (sec)</th><th>Exploit Success</th><th>Resilience Score (0-100)</th></tr>
+            {% for row in results_before %}
+            <tr>
+                <td>{{ row.attack_type }}</td>
+                <td>{{ row.tte }}s</td>
+                <td class="{% if row.success %}success-true{% else %}success-false{% endif %}">{{ "Yes" if row.success else "No" }}</td>
+                <td class="{% if row.score > 50 %}score-high{% else %}score-low{% endif %}">{{ row.score }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Phase 2: After Chaos (Degraded Defenses)</h2>
+        <table>
+            <tr><th>Attack Type</th><th>TTE (sec)</th><th>Exploit Success</th><th>Resilience Score (0-100)</th></tr>
+            {% for row in results_after %}
+            <tr>
+                <td>{{ row.attack_type }}</td>
+                <td>{{ row.tte }}s</td>
+                <td class="{% if row.success %}success-true{% else %}success-false{% endif %}">{{ "Yes" if row.success else "No" }}</td>
+                <td class="{% if row.score > 50 %}score-high{% else %}score-low{% endif %}">{{ row.score }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
