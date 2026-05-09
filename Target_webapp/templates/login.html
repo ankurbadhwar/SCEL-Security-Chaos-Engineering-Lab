@@ -50,12 +50,24 @@
         <h2>SCEL Login</h2>
 
         <form method="POST" action="/login-ui">
-            <input type="text" name="username" placeholder="Username"><br>
+            <input type="text" name="username" placeholder="Username" value="{{username}}"><br>
             <input type="password" name="password" placeholder="Password"><br>
             <button type="submit">Login</button>
         </form>
 
         <p>{{ message }}</p>
+        {% if cleaned %}
+    <div style="margin-top:15px; padding:10px; background:#334155; border-radius:8px;">
+        <p><strong>Original Input:</strong> {{ username }}</p>
+        <p><strong>Cleaned Input:</strong> {{ cleaned }}</p>
+
+        {% if attack %}
+            <p style="color:#ef4444;">⚠️ Suspicious input detected!</p>
+        {% else %}
+            <p style="color:#22c55e;">✅ Input looks safe</p>
+        {% endif %}
+    </div>
+{% endif %}
     </div>
 </body>
 </html>
