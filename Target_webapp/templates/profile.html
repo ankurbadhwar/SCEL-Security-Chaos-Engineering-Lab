@@ -1,98 +1,324 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Profile</title>
+    <title>SCEL Dashboard</title>
+
     <style>
+
         body {
             background: #0f172a;
             color: white;
             font-family: Arial;
-            text-align: center;
-            margin-top: 80px;
+            margin: 0;
+            padding: 0;
         }
 
-        .box {
+        .navbar {
+            background: #111827;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #1e293b;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+            gap: 20px;
+        }
+
+        .card {
             background: #1e293b;
-            padding: 30px;
-            border-radius: 10px;
-            display: inline-block;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
+        }
+
+        .title {
+            font-size: 22px;
+            margin-bottom: 20px;
         }
 
         .status {
-            margin: 10px;
+            margin: 12px 0;
             font-weight: bold;
         }
 
         .on {
-            color: #22c55e; /* green */
+            color: #22c55e;
         }
 
         .off {
-            color: #ef4444; /* red */
+            color: #ef4444;
+        }
+
+        .danger {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .safe {
+            color: #22c55e;
+            font-weight: bold;
         }
 
         button {
-            margin: 10px;
             padding: 10px 15px;
-            background: #3b82f6;
             border: none;
-            color: white;
-            border-radius: 5px;
+            border-radius: 6px;
+            margin: 8px;
             cursor: pointer;
+            color: white;
+            font-weight: bold;
         }
 
-        button:hover {
+        .attack-btn {
+            background: #dc2626;
+        }
+
+        .attack-btn:hover {
+            background: #b91c1c;
+        }
+
+        .toggle-btn {
             background: #2563eb;
         }
+
+        .toggle-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .token-box {
+            background: black;
+            color: #22c55e;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            overflow-wrap: break-word;
+        }
+
+        .blocked {
+            background: #7f1d1d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 
 <body>
-    <div class="box">
-        <h2>Welcome User {{ user_id }}</h2>
 
-        <h3>Security Controls</h3>
-
-        <p class="status">
-            RBAC:
-            {% if rbac %}
-                <span class="on">ON 🟢</span>
-            {% else %}
-                <span class="off">OFF 🔴</span>
-            {% endif %}
-        </p>
-
-        <p class="status">
-            Rate Limit:
-            {% if rate %}
-                <span class="on">ON 🟢</span>
-            {% else %}
-                <span class="off">OFF 🔴</span>
-            {% endif %}
-        </p>
-
-        <p class="status">
-            Sanitization:
-            {% if sanitize %}
-                <span class="on">ON 🟢</span>
-            {% else %}
-                <span class="off">OFF 🔴</span>
-            {% endif %}
-        </p>
-
-        <h4>Attack Simulation</h4>
-
-<a href="/profile/2" target="_blank">
-    <button <button onclick="window.open('/profile/2', '_blank')" style="background:#ef4444;">
-    Try IDOR Attack
-</button>
-</a>
-
-        <form method="POST" action="/toggle-ui">
-            <button name="control" value="RBAC_ENABLED">Toggle RBAC</button>
-            <button name="control" value="RATE_LIMIT_ENABLED">Toggle Rate Limit</button>
-            <button name="control" value="INPUT_SANITIZATION_ENABLED">Toggle Sanitization</button>
-        </form>
+    <div class="navbar">
+        SCEL - Security Chaos Engineering Lab
     </div>
+
+    <div class="container">
+
+        {% if blocked %}
+            <div class="blocked">
+                🚫 IDOR Attack Blocked — Unauthorized Access Attempt Detected
+            </div>
+        {% endif %}
+
+        <div class="grid">
+
+            <!-- USER INFO -->
+            <div class="card">
+
+                <div class="title">User Information</div>
+
+                <p><b>Logged In User:</b> {{ current_user }}</p>
+
+                {% if profile %}
+                    <p><b>Username:</b> {{ profile.username }}</p>
+                    <p><b>Email:</b> {{ profile.email }}</p>
+                    <p><b>Balance:</b> ₹{{ profile.balance }}</p>
+                    <p><b>Role:</b> {{ profile.role }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- SESSION INFO -->
+            <div class="card">
+
+                <div class="title">Session Security</div>
+
+                {% if vulnerable_session %}
+                    <p class="danger">
+                        ❌ Vulnerable Session Detected
+                    </p>
+                {% else %}
+                    <p class="safe">
+                        ✅ Secure Session Active
+                    </p>
+                {% endif %}
+
+                <p><b>Session Token:</b></p>
+
+                <div class="token-box">
+                    {{ session_token }}
+                </div>
+
+            </div>
+
+            <!-- SECURITY CONTROLS -->
+            <div class="card">
+
+                <div class="title">Security Controls</div>
+
+                <p class="status">
+                    RBAC:
+                    {% if rbac %}
+                        <span class="on">ON 🟢</span>
+                    {% else %}
+                        <span class="off">OFF 🔴</span>
+                    {% endif %}
+                </p>
+
+                <p class="status">
+                    Rate Limit:
+                    {% if rate %}
+                        <span class="on">ON 🟢</span>
+                    {% else %}
+                        <span class="off">OFF 🔴</span>
+                    {% endif %}
+                </p>
+
+                <p class="status">
+                    Sanitization:
+                    {% if sanitize %}
+                        <span class="on">ON 🟢</span>
+                    {% else %}
+                        <span class="off">OFF 🔴</span>
+                    {% endif %}
+                </p>
+
+                <p class="status">
+                    IDOR Protection:
+                    {% if idor %}
+                        <span class="on">ON 🟢</span>
+                    {% else %}
+                        <span class="off">OFF 🔴</span>
+                    {% endif %}
+                </p>
+
+                <p class="status">
+                    Session Protection:
+                    {% if session_protection %}
+                        <span class="on">ON 🟢</span>
+                    {% else %}
+                        <span class="off">OFF 🔴</span>
+                    {% endif %}
+                </p>
+
+                <p class="status">
+                    CSRF Protection:
+                    {% if csrf %}
+                        <span class="on">ON 🟢</span>
+                    {% else %}
+                        <span class="off">OFF 🔴</span>
+                    {% endif %}
+                </p>
+
+            </div>
+
+            <!-- ATTACK SIMULATION -->
+            <div class="card">
+
+                <div class="title">Attack Simulation</div>
+
+                <p>Try accessing another user's profile:</p>
+
+                <button class="attack-btn"
+                        onclick="window.open('/profile-ui/1','_blank')">
+                    Attack Admin Profile
+                </button>
+
+                <button class="attack-btn"
+                        onclick="window.open('/profile-ui/2','_blank')">
+                    Attack User1 Profile
+                </button>
+
+                <button class="attack-btn"
+                        onclick="window.open('/profile-ui/3','_blank')">
+                    Attack User2 Profile
+                </button>
+
+                <hr style="margin:20px 0;">
+
+                <p>CSRF Attack Demo:</p>
+
+                <button class="attack-btn"
+                        onclick="window.open('/transfer-page','_blank')">
+                    Open Transfer Page
+                </button>
+
+                <button class="attack-btn"
+                        onclick="window.open('/attacker','_blank')">
+                    Launch CSRF Attack
+                </button>
+
+            </div>
+
+            <!-- TOGGLE CONTROLS -->
+            <div class="card">
+
+                <div class="title">Chaos Controls</div>
+
+                <form method="POST" action="/toggle-ui">
+
+                    <button class="toggle-btn"
+                            name="control"
+                            value="RBAC_ENABLED">
+                        Toggle RBAC
+                    </button>
+
+                    <button class="toggle-btn"
+                            name="control"
+                            value="RATE_LIMIT_ENABLED">
+                        Toggle Rate Limit
+                    </button>
+
+                    <button class="toggle-btn"
+                            name="control"
+                            value="INPUT_SANITIZATION_ENABLED">
+                        Toggle Sanitization
+                    </button>
+
+                    <button class="toggle-btn"
+                            name="control"
+                            value="IDOR_PROTECTION">
+                        Toggle IDOR
+                    </button>
+
+                    <button class="toggle-btn"
+                            name="control"
+                            value="SESSION_PROTECTION">
+                        Toggle Session
+                    </button>
+
+                    <button class="toggle-btn"
+                            name="control"
+                            value="CSRF_PROTECTION">
+                        Toggle CSRF
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </body>
 </html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Money Transfer</title>
+
+    <style>
+
+        body{
+            background:#0f172a;
+            color:white;
+            font-family:Arial;
+            text-align:center;
+            margin-top:100px;
+        }
+
+        .box{
+            background:#1e293b;
+            width:400px;
+            margin:auto;
+            padding:30px;
+            border-radius:10px;
+        }
+
+        input{
+            width:90%;
+            padding:10px;
+            margin:10px;
+        }
+
+        button{
+            background:#2563eb;
+            color:white;
+            border:none;
+            padding:10px 20px;
+            cursor:pointer;
+            border-radius:5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="box">
+
+        <h2>Transfer Money</h2>
+
+        {% if csrf %}
+            <p style="color:lime;">
+                ✅ CSRF Protection Enabled
+            </p>
+        {% else %}
+            <p style="color:red;">
+                ❌ CSRF Protection Disabled
+            </p>
+        {% endif %}
+
+        <form method="POST" action="/transfer">
+
+            <input type="text"
+                   name="amount"
+                   placeholder="Enter amount">
+
+            {% if csrf %}
+                <input type="hidden"
+                       name="csrf_token"
+                       value="{{ csrf_token }}">
+            {% endif %}
+
+            <button type="submit">
+                Transfer
+            </button>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>
