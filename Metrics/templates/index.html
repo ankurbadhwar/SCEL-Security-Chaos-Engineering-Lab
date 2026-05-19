@@ -20,38 +20,41 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
+        /* Glowing card borders */
         .card-baseline {
-            background: linear-gradient(135deg, #111827, #0f1219);
-            border: 1px solid rgba(16, 185, 129, .3);
-            box-shadow: 0 0 20px rgba(16, 185, 129, .05), inset 0 1px 0 rgba(16, 185, 129, .1);
+            background: linear-gradient(135deg, #111827 0%, #0f1219 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.05), inset 0 1px 0 rgba(16, 185, 129, 0.1);
         }
 
         .card-chaos {
-            background: linear-gradient(135deg, #111827, #0f1219);
-            border: 1px solid rgba(239, 68, 68, .3);
-            box-shadow: 0 0 20px rgba(239, 68, 68, .05), inset 0 1px 0 rgba(239, 68, 68, .1);
+            background: linear-gradient(135deg, #111827 0%, #0f1219 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.05), inset 0 1px 0 rgba(239, 68, 68, 0.1);
         }
 
         .card-log {
-            background: linear-gradient(135deg, #111827, #0f1219);
-            border: 1px solid rgba(56, 189, 248, .15);
-            box-shadow: 0 0 30px rgba(56, 189, 248, .03);
+            background: linear-gradient(135deg, #111827 0%, #0f1219 100%);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.03);
         }
 
+        /* Highlighted row */
         .row-highlight {
-            background: rgba(16, 185, 129, .06);
+            background: rgba(16, 185, 129, 0.06);
             border-left: 3px solid #10b981;
         }
 
+        /* Pulse animation for running status */
         @keyframes pulse-dot {
 
             0%,
             100% {
-                opacity: 1
+                opacity: 1;
             }
 
             50% {
-                opacity: .4
+                opacity: 0.4;
             }
         }
 
@@ -59,16 +62,18 @@
             animation: pulse-dot 2s ease-in-out infinite;
         }
 
+        /* Subtle grid background */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background-image: radial-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 30px 30px;
             pointer-events: none;
             z-index: -1;
         }
 
+        /* Custom select styling */
         select {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
@@ -79,7 +84,7 @@
 </head>
 
 <body class="selection:bg-amber-500/30 min-h-screen">
-    <!-- HEADER -->
+
     <header
         class="px-8 py-5 flex items-center justify-between border-b border-white/5 bg-[#0b0e14]/80 backdrop-blur-xl sticky top-0 z-50">
         <div>
@@ -119,47 +124,64 @@
     </header>
 
     <main class="max-w-[1360px] mx-auto px-8 py-7 space-y-6">
-        <!-- TOP CARDS -->
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Baseline State -->
-            <div class="card-baseline rounded-xl p-6">
-                <div class="flex items-center gap-2 mb-5"><span class="text-lg">🛡️</span>
+            <div class="card-baseline rounded-xl p-6 relative overflow-hidden">
+                <div class="flex items-center gap-2 mb-5">
+                    <span class="text-lg">🛡️</span>
                     <h2 class="text-base font-bold text-emerald-400">Baseline State (Before)</h2>
                 </div>
-                <div class="flex justify-between items-center border-b border-white/5 py-3.5">
-                    <span class="text-sm text-slate-400">System Resilience</span>
-                    <div class="flex items-center gap-3">
-                        <svg id="sparkline" viewBox="0 0 120 30" class="w-28 h-7"></svg>
-                        <div class="flex items-center gap-1">
-                            <span class="text-xl font-mono font-bold text-emerald-400">98.5%</span>
-                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor"
-                                stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                <div class="space-y-0">
+                    <div class="flex justify-between items-center border-b border-white/5 py-3.5">
+                        <span class="text-sm text-slate-400">System Resilience</span>
+                        <div class="flex items-center gap-3">
+                            <svg viewBox="0 0 120 30" class="w-28 h-7">
+                                <defs>
+                                    <linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.3" />
+                                        <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                <path
+                                    d="M0,25 C10,24 15,22 25,23 C35,24 40,20 50,18 C60,16 65,15 75,12 C85,9 95,6 105,4 L120,2"
+                                    fill="none" stroke="#10b981" stroke-width="2" />
+                                <path
+                                    d="M0,25 C10,24 15,22 25,23 C35,24 40,20 50,18 C60,16 65,15 75,12 C85,9 95,6 105,4 L120,2 L120,30 L0,30 Z"
+                                    fill="url(#sparkG)" />
                             </svg>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xl font-mono font-bold text-emerald-400">98.5%</span>
+                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 py-3.5">
-                    <span class="text-sm text-slate-400">Active Vulnerabilities</span>
-                    <span class="text-lg font-mono font-bold text-cyan-300">0</span>
-                </div>
-                <div class="flex justify-between items-center py-3.5">
-                    <span class="text-sm text-slate-400">Target Node Health</span>
-                    <span
-                        class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/25 rounded text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Optimal</span>
+                    <div class="flex justify-between items-center border-b border-white/5 py-3.5">
+                        <span class="text-sm text-slate-400">Active Vulnerabilities</span>
+                        <span class="text-lg font-mono font-bold text-cyan-300">0</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3.5">
+                        <span class="text-sm text-slate-400">Target Node Health</span>
+                        <span
+                            class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/25 rounded text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Optimal</span>
+                    </div>
                 </div>
             </div>
-            <!-- Chaos Impact -->
-            <div class="card-chaos rounded-xl p-6">
+
+            <div class="card-chaos rounded-xl p-6 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-5">
-                    <div class="flex items-center gap-2"><span class="text-lg">🔥</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">🔥</span>
                         <h2 class="text-base font-bold text-red-400">Chaos Impact (After)</h2>
                     </div>
                     <span class="text-[9px] text-slate-500 font-mono uppercase tracking-wider">Security Degradation
                         Heatmap</span>
                 </div>
                 <div class="grid grid-cols-[1fr_auto] gap-4">
-                    <div>
+                    <div class="space-y-0">
                         <div class="flex justify-between items-center border-b border-white/5 py-3.5">
                             <span class="text-sm text-slate-400">System Resilience</span>
                             <div class="flex items-center gap-1">
@@ -181,14 +203,34 @@
                                 class="px-3 py-1 bg-red-500/10 border border-red-500/25 rounded text-[10px] font-bold text-red-400 uppercase tracking-wider">Degraded</span>
                         </div>
                     </div>
-                    <div class="flex items-center justify-center pl-2"><svg id="radar" viewBox="0 0 120 120"
-                            class="w-[130px] h-[130px]"></svg></div>
+                    <div class="flex items-center justify-center pl-2">
+                        <svg viewBox="0 0 120 120" class="w-[130px] h-[130px]">
+                            <polygon points="60,15 102,37.5 102,82.5 60,105 18,82.5 18,37.5" fill="none"
+                                stroke="rgba(239,68,68,0.08)" stroke-width="0.5" />
+                            <polygon points="60,25 93,42.5 93,77.5 60,95 27,77.5 27,42.5" fill="none"
+                                stroke="rgba(239,68,68,0.08)" stroke-width="0.5" />
+                            <polygon points="60,35 84,47.5 84,72.5 60,85 36,72.5 36,47.5" fill="none"
+                                stroke="rgba(239,68,68,0.08)" stroke-width="0.5" />
+                            <line x1="60" y1="60" x2="60" y2="15" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
+                            <line x1="60" y1="60" x2="102" y2="37.5" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
+                            <line x1="60" y1="60" x2="102" y2="82.5" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
+                            <line x1="60" y1="60" x2="60" y2="105" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
+                            <line x1="60" y1="60" x2="18" y2="82.5" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
+                            <line x1="60" y1="60" x2="18" y2="37.5" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
+                            <polygon points="60,22 95,42 88,80 35,82 25,45" fill="rgba(239, 68, 68, 0.15)"
+                                stroke="#ef4444" stroke-width="1.5" stroke-linejoin="round" />
+                            <circle cx="60" cy="22" r="2.5" fill="#ef4444" />
+                            <circle cx="95" cy="42" r="2.5" fill="#ef4444" />
+                            <circle cx="88" cy="80" r="2.5" fill="#ef4444" />
+                            <circle cx="35" cy="82" r="2.5" fill="#ef4444" />
+                            <circle cx="25" cy="45" r="2.5" fill="#ef4444" />
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- LIVE EXPERIMENT LOG -->
-        <div class="card-log rounded-xl overflow-hidden">
+        <div class="card-log rounded-xl overflow-hidden flex flex-col">
             <div class="px-7 py-5 flex items-center justify-between border-b border-white/5">
                 <h2 class="text-lg font-bold text-white">Live Experiment Log</h2>
                 <div class="flex items-center gap-3">
@@ -219,10 +261,12 @@
                     </select>
                 </div>
             </div>
-            <table class="w-full text-left">
+
+            <table class="w-full text-left flex-1">
                 <thead>
                     <tr
                         class="bg-[#0c0e14] text-[10px] font-mono tracking-[0.15em] text-slate-500 uppercase border-b border-white/5">
+                        <th class="px-7 py-3.5 font-medium w-16 text-center">Enable</th>
                         <th class="px-7 py-3.5 font-medium">Experiment ID</th>
                         <th class="px-7 py-3.5 font-medium">Target Node</th>
                         <th class="px-7 py-3.5 font-medium">Blast Radius</th>
@@ -233,10 +277,23 @@
                 </thead>
                 <tbody id="metrics-table-body" class="divide-y divide-white/5"></tbody>
             </table>
+
+            <div class="px-7 py-5 bg-[#0b0e14]/50 border-t border-white/5 flex items-center justify-between">
+                <p class="text-xs text-slate-500 font-mono"><span id="selected-count"
+                        class="text-cyan-400 font-bold">0</span> experiments queued for execution.</p>
+                <button id="execute-btn" onclick="executeChaos()"
+                    class="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-bold text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    EXECUTE CHAOS
+                </button>
+            </div>
         </div>
     </main>
 
-    <!-- Ambient glow -->
     <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
         <div class="absolute top-[-15%] right-[-5%] w-[35%] h-[35%] bg-blue-600/[0.04] blur-[150px] rounded-full"></div>
         <div class="absolute bottom-[-15%] left-[-5%] w-[35%] h-[35%] bg-red-600/[0.04] blur-[150px] rounded-full">
@@ -246,70 +303,133 @@
     </div>
 
     <script>
-        // Generate sparkline SVG
-        document.getElementById('sparkline').innerHTML = `<defs><linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity=".3"/><stop offset="100%" stop-color="#10b981" stop-opacity="0"/></linearGradient></defs><path d="M0,25 C10,24 15,22 25,23 C35,24 40,20 50,18 C60,16 65,15 75,12 C85,9 95,6 105,4 L120,2" fill="none" stroke="#10b981" stroke-width="2"/><path d="M0,25 C10,24 15,22 25,23 C35,24 40,20 50,18 C60,16 65,15 75,12 C85,9 95,6 105,4 L120,2 L120,30 L0,30 Z" fill="url(#sparkG)"/>`;
-
-        // Generate radar chart SVG
-        const rc = (s) => `rgba(239,68,68,${s})`;
-        const rings = [[60, 15, 102, 37.5, 102, 82.5, 60, 105, 18, 82.5, 18, 37.5], [60, 25, 93, 42.5, 93, 77.5, 60, 95, 27, 77.5, 27, 42.5], [60, 35, 84, 47.5, 84, 72.5, 60, 85, 36, 72.5, 36, 47.5]];
-        const axes = [[60, 60, 60, 15], [60, 60, 102, 37.5], [60, 60, 102, 82.5], [60, 60, 60, 105], [60, 60, 18, 82.5], [60, 60, 18, 37.5]];
-        const pts = [[60, 22], [95, 42], [88, 80], [35, 82], [25, 45]];
-        let radarSvg = rings.map(r => `<polygon points="${r}" fill="none" stroke="${rc(.08)}" stroke-width=".5"/>`).join('');
-        radarSvg += axes.map(a => `<line x1="${a[0]}" y1="${a[1]}" x2="${a[2]}" y2="${a[3]}" stroke="${rc(.1)}" stroke-width=".5"/>`).join('');
-        radarSvg += `<polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="${rc(.15)}" stroke="#ef4444" stroke-width="1.5" stroke-linejoin="round"/>`;
-        radarSvg += pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#ef4444"/>`).join('');
-        document.getElementById('radar').innerHTML = radarSvg;
-
-        // Data & config
+        // NEW: Added an 'enabled' boolean to each row of data
         const mockChaosData = [
-            { id: 'SCEL-001', target: 'auth-service-node', blastRadius: 'Isolated', status: 'Running', timeToExploit: 'N/A' },
-            { id: 'SCEL-002', target: 'payment-gateway', blastRadius: 'High', status: 'Mitigated', timeToExploit: '14.2s', highlight: true },
-            { id: 'SCEL-003', target: 'user-db-cluster', blastRadius: 'Low', status: 'Passed', timeToExploit: 'Timeout (Safe)' },
-            { id: 'SCEL-004', target: 'kafka-queue', blastRadius: 'Medium', status: 'Failed', timeToExploit: '2.1s' },
-            { id: 'SCEL-005', target: 'profile-update-api (CSRF)', blastRadius: 'Medium', status: 'Mitigated', timeToExploit: '5.4s' },
-            { id: 'SCEL-006', target: 'invoice-service (IDOR)', blastRadius: 'High', status: 'Failed', timeToExploit: '1.8s' },
-            { id: 'SCEL-007', target: 'session-manager (Broken Auth)', blastRadius: 'High', status: 'Running', timeToExploit: 'N/A' }
+            { id: 'SCEL-001', target: 'auth-service-node', blastRadius: 'Isolated', status: 'Running', timeToExploit: 'N/A', enabled: false },
+            { id: 'SCEL-002', target: 'payment-gateway', blastRadius: 'High', status: 'Mitigated', timeToExploit: '14.2s', highlight: true, enabled: true },
+            { id: 'SCEL-003', target: 'user-db-cluster', blastRadius: 'Low', status: 'Passed', timeToExploit: 'Timeout (Safe)', enabled: false },
+            { id: 'SCEL-004', target: 'kafka-queue', blastRadius: 'Medium', status: 'Failed', timeToExploit: '2.1s', enabled: true },
+            { id: 'SCEL-005', target: 'profile-update-api (CSRF)', blastRadius: 'Medium', status: 'Mitigated', timeToExploit: '5.4s', enabled: false },
+            { id: 'SCEL-006', target: 'invoice-service (IDOR)', blastRadius: 'High', status: 'Failed', timeToExploit: '1.8s', enabled: true },
+            { id: 'SCEL-007', target: 'session-manager (Broken Auth)', blastRadius: 'High', status: 'Running', timeToExploit: 'N/A', enabled: false }
         ];
 
-        const blastColors = { HIGH: 'red', MEDIUM: 'amber', LOW: 'emerald', ISOLATED: 'sky' };
-        const statusCfg = {
-            Running: { color: 'sky', icon: '<svg class="w-3.5 h-3.5 pulse-dot" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>' },
-            Mitigated: { color: 'emerald', icon: '<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>' },
-            Passed: { color: 'emerald', icon: '<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>' },
-            Failed: { color: 'red', icon: '<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' }
-        };
+        function getBlastBadge(radius) {
+            const r = radius.toUpperCase();
+            const map = {
+                'HIGH': 'bg-red-500/15 text-red-400 border-red-500/25',
+                'MEDIUM': 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+                'LOW': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+                'ISOLATED': 'bg-sky-500/15 text-sky-400 border-sky-500/25'
+            };
+            const cls = map[r] || 'bg-slate-500/15 text-slate-400 border-slate-500/25';
+            return `<span class="inline-block px-2.5 py-0.5 border rounded text-[10px] font-bold uppercase tracking-wide ${cls}">${radius}</span>`;
+        }
+
+        function getStatusBadge(status) {
+            const icons = {
+                'Running': `<svg class="w-3.5 h-3.5 pulse-dot" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,
+                'Mitigated': `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
+                'Passed': `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
+                'Failed': `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`
+            };
+            const colors = {
+                'Running': 'text-sky-400',
+                'Mitigated': 'text-emerald-400',
+                'Passed': 'text-emerald-400',
+                'Failed': 'text-red-400'
+            };
+            const color = colors[status] || 'text-slate-400';
+            const icon = icons[status] || '';
+            return `<span class="flex items-center gap-1.5 text-sm font-semibold ${color}">${icon} ${status}</span>`;
+        }
 
         function renderTable(data) {
             const tbody = document.getElementById('metrics-table-body');
-            tbody.innerHTML = data.map(row => {
-                const bc = blastColors[row.blastRadius.toUpperCase()] || 'slate';
-                const sc = statusCfg[row.status] || { color: 'slate', icon: '' };
-                const dots = row.highlight ? `<button class="text-slate-500 hover:text-slate-300"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/></svg></button>` : '';
-                return `<tr class="hover:bg-white/[0.03] transition-colors ${row.highlight ? 'row-highlight' : ''}">
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const hlClass = row.highlight ? 'row-highlight' : '';
+                tr.className = `hover:bg-white/[0.03] transition-colors ${hlClass}`;
+
+                const dots = row.highlight ? `<button class="text-slate-500 hover:text-slate-300 transition-colors"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/></svg></button>` : '';
+
+                // NEW: Added the toggle switch as the first table data cell (td)
+                tr.innerHTML = `
+                    <td class="px-7 py-4 text-center">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer chaos-toggle" value="${row.id}" ${row.enabled ? 'checked' : ''} onchange="updateQueueCount()">
+                            <div class="w-8 h-4 bg-[#1a1f28] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-gray-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500/80 peer-checked:border-cyan-500"></div>
+                        </label>
+                    </td>
                     <td class="px-7 py-4 text-sm font-mono text-slate-300">${row.id}</td>
                     <td class="px-7 py-4 text-sm font-mono text-cyan-400">${row.target}</td>
-                    <td class="px-7 py-4"><span class="inline-block px-2.5 py-0.5 border rounded text-[10px] font-bold uppercase tracking-wide bg-${bc}-500/15 text-${bc}-400 border-${bc}-500/25">${row.blastRadius}</span></td>
+                    <td class="px-7 py-4">${getBlastBadge(row.blastRadius)}</td>
                     <td class="px-7 py-4 text-sm font-mono text-slate-400">${row.timeToExploit}</td>
-                    <td class="px-7 py-4"><span class="flex items-center gap-1.5 text-sm font-semibold text-${sc.color}-400">${sc.icon} ${row.status}</span></td>
-                    <td class="px-7 py-4 text-right">${dots}</td></tr>`;
-            }).join('');
+                    <td class="px-7 py-4">${getStatusBadge(row.status)}</td>
+                    <td class="px-7 py-4 text-right">${dots}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateQueueCount();
+        }
+
+        // NEW: Function to count how many toggles are checked
+        function updateQueueCount() {
+            const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
+            document.getElementById('selected-count').textContent = checkboxes.length;
+        }
+
+        // NEW: Function attached to the Start button
+        function executeChaos() {
+            const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (selectedIds.length === 0) {
+                alert("Please select at least one vulnerability to test.");
+                return;
+            }
+
+            // This is the data you will eventually send to Ankur's API!
+            console.log("Preparing to execute chaos on:", selectedIds);
+            alert(`Executing Chaos Orchestrator for: \n${selectedIds.join(', ')} \n\n(Check your browser console to see the array ready for the backend)`);
+
+            // Example of how you will eventually call Ankur's backend:
+            // fetch('http://localhost:8000/api/execute', { 
+            //    method: 'POST', 
+            //    body: JSON.stringify({ experiments: selectedIds }) 
+            // });
         }
 
         function updateStatus(state) {
-            const el = document.getElementById('status-indicator'), dot = el.previousElementSibling;
-            const isLive = state === 'live';
-            el.textContent = isLive ? 'Live Telemetry' : 'Mock Mode';
-            const c = isLive ? 'emerald' : 'amber';
-            el.className = `text-[11px] font-bold text-${c}-400 uppercase tracking-wide`;
-            if (dot) dot.className = `w-2 h-2 rounded-full bg-${c}-400 pulse-dot`;
+            const indicator = document.getElementById('status-indicator');
+            if (!indicator) return;
+            const dot = indicator.previousElementSibling;
+            if (state === 'live') {
+                indicator.textContent = 'Live Telemetry';
+                indicator.className = 'text-[11px] font-bold text-emerald-400 uppercase tracking-wide';
+                if (dot) { dot.className = 'w-2 h-2 rounded-full bg-emerald-400 pulse-dot'; }
+            } else {
+                indicator.textContent = 'Mock Mode';
+                indicator.className = 'text-[11px] font-bold text-amber-400 uppercase tracking-wide';
+                if (dot) { dot.className = 'w-2 h-2 rounded-full bg-amber-400 pulse-dot'; }
+            }
         }
 
         async function fetchMetrics() {
             try {
-                const r = await fetch('http://localhost:9999/dummy-url-to-force-fail');
-                if (!r.ok) throw 0;
-                renderTable(await r.json()); updateStatus('live');
-            } catch { renderTable(mockChaosData); updateStatus('mock'); }
+                const response = await fetch('http://localhost:9999/dummy-url-to-force-fail');
+                if (!response.ok) throw new Error('API down');
+                const liveData = await response.json();
+                renderTable(liveData);
+                updateStatus('live');
+            } catch (error) {
+                console.log('Orchestrator not detected. Falling back to Mock Data.');
+                renderTable(mockChaosData);
+                updateStatus('mock');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', fetchMetrics);
