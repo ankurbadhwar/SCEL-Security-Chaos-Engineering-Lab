@@ -20,7 +20,6 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Glowing card borders */
         .card-baseline {
             background: linear-gradient(135deg, #111827 0%, #0f1219 100%);
             border: 1px solid rgba(16, 185, 129, 0.3);
@@ -39,13 +38,11 @@
             box-shadow: 0 0 30px rgba(56, 189, 248, 0.03);
         }
 
-        /* Highlighted row */
         .row-highlight {
             background: rgba(16, 185, 129, 0.06);
             border-left: 3px solid #10b981;
         }
 
-        /* Pulse animation for running status */
         @keyframes pulse-dot {
 
             0%,
@@ -62,7 +59,6 @@
             animation: pulse-dot 2s ease-in-out infinite;
         }
 
-        /* Subtle grid background */
         body::before {
             content: '';
             position: fixed;
@@ -73,7 +69,6 @@
             z-index: -1;
         }
 
-        /* Custom select styling */
         select {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
@@ -189,7 +184,7 @@
                                 <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor"
                                     stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        d="M19 14l-7 7m0 0l7-7m7 7V3" />
                                 </svg>
                             </div>
                         </div>
@@ -234,15 +229,6 @@
             <div class="px-7 py-5 flex items-center justify-between border-b border-white/5">
                 <h2 class="text-lg font-bold text-white">Live Experiment Log</h2>
                 <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" fill="none"
-                            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.3-4.3" />
-                        </svg>
-                        <input type="text" placeholder="Search"
-                            class="bg-[#0c0f15] border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500/30 w-52 transition-colors">
-                    </div>
                     <select
                         class="bg-[#0c0f15] border border-white/10 rounded-lg px-3 pr-7 py-2 text-xs font-semibold text-slate-300 focus:outline-none cursor-pointer">
                         <option>Status</option>
@@ -267,7 +253,6 @@
                     <tr
                         class="bg-[#0c0e14] text-[10px] font-mono tracking-[0.15em] text-slate-500 uppercase border-b border-white/5">
                         <th class="px-7 py-3.5 font-medium w-16 text-center">Enable</th>
-                        <th class="px-7 py-3.5 font-medium">Experiment ID</th>
                         <th class="px-7 py-3.5 font-medium">Target Node</th>
                         <th class="px-7 py-3.5 font-medium">Blast Radius</th>
                         <th class="px-7 py-3.5 font-medium">Time to Exploit</th>
@@ -303,15 +288,14 @@
     </div>
 
     <script>
-        // NEW: Added an 'enabled' boolean to each row of data
         const mockChaosData = [
-            { id: 'SCEL-001', target: 'auth-service-node', blastRadius: 'Isolated', status: 'Running', timeToExploit: 'N/A', enabled: false },
-            { id: 'SCEL-002', target: 'payment-gateway', blastRadius: 'High', status: 'Mitigated', timeToExploit: '14.2s', highlight: true, enabled: true },
-            { id: 'SCEL-003', target: 'user-db-cluster', blastRadius: 'Low', status: 'Passed', timeToExploit: 'Timeout (Safe)', enabled: false },
-            { id: 'SCEL-004', target: 'kafka-queue', blastRadius: 'Medium', status: 'Failed', timeToExploit: '2.1s', enabled: true },
-            { id: 'SCEL-005', target: 'profile-update-api (CSRF)', blastRadius: 'Medium', status: 'Mitigated', timeToExploit: '5.4s', enabled: false },
-            { id: 'SCEL-006', target: 'invoice-service (IDOR)', blastRadius: 'High', status: 'Failed', timeToExploit: '1.8s', enabled: true },
-            { id: 'SCEL-007', target: 'session-manager (Broken Auth)', blastRadius: 'High', status: 'Running', timeToExploit: 'N/A', enabled: false }
+            { target: 'auth-service', blastRadius: 'Isolated', status: 'Running', timeToExploit: 'N/A', enabled: false },
+            { target: 'payment-gw', blastRadius: 'High', status: 'Mitigated', timeToExploit: '14.2s', highlight: true, enabled: true },
+            { target: 'user-db', blastRadius: 'Low', status: 'Passed', timeToExploit: 'Timeout (Safe)', enabled: false },
+            { target: 'kafka-cluster', blastRadius: 'Medium', status: 'Failed', timeToExploit: '2.1s', enabled: true },
+            { target: 'profile-api (CSRF - Cross-Site Request Forgery)', blastRadius: 'Medium', status: 'Mitigated', timeToExploit: '5.4s', enabled: false },
+            { target: 'document-api (IDOR - Insecure Direct Object Reference)', blastRadius: 'High', status: 'Failed', timeToExploit: '1.8s', enabled: true },
+            { target: 'session-store (Broken Auth)', blastRadius: 'High', status: 'Running', timeToExploit: 'N/A', enabled: false }
         ];
 
         function getBlastBadge(radius) {
@@ -356,15 +340,13 @@
 
                 const dots = row.highlight ? `<button class="text-slate-500 hover:text-slate-300 transition-colors"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/></svg></button>` : '';
 
-                // NEW: Added the toggle switch as the first table data cell (td)
                 tr.innerHTML = `
                     <td class="px-7 py-4 text-center">
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer chaos-toggle" value="${row.id}" ${row.enabled ? 'checked' : ''} onchange="updateQueueCount()">
+                            <input type="checkbox" class="sr-only peer chaos-toggle" value="${row.target}" ${row.enabled ? 'checked' : ''} onchange="updateQueueCount()">
                             <div class="w-8 h-4 bg-[#1a1f28] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-gray-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500/80 peer-checked:border-cyan-500"></div>
                         </label>
                     </td>
-                    <td class="px-7 py-4 text-sm font-mono text-slate-300">${row.id}</td>
                     <td class="px-7 py-4 text-sm font-mono text-cyan-400">${row.target}</td>
                     <td class="px-7 py-4">${getBlastBadge(row.blastRadius)}</td>
                     <td class="px-7 py-4 text-sm font-mono text-slate-400">${row.timeToExploit}</td>
@@ -376,30 +358,26 @@
             updateQueueCount();
         }
 
-        // NEW: Function to count how many toggles are checked
         function updateQueueCount() {
             const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
             document.getElementById('selected-count').textContent = checkboxes.length;
         }
 
-        // NEW: Function attached to the Start button
         function executeChaos() {
             const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
-            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            const selectedTargets = Array.from(checkboxes).map(cb => cb.value);
 
-            if (selectedIds.length === 0) {
+            if (selectedTargets.length === 0) {
                 alert("Please select at least one vulnerability to test.");
                 return;
             }
 
-            // This is the data you will eventually send to Ankur's API!
-            console.log("Preparing to execute chaos on:", selectedIds);
-            alert(`Executing Chaos Orchestrator for: \n${selectedIds.join(', ')} \n\n(Check your browser console to see the array ready for the backend)`);
+            console.log("Preparing to execute chaos on:", selectedTargets);
+            alert(`Executing Chaos Orchestrator for: \n${selectedTargets.join(', ')}`);
 
-            // Example of how you will eventually call Ankur's backend:
-            // fetch('http://localhost:8000/api/execute', { 
+            // fetch('/api/execute', { 
             //    method: 'POST', 
-            //    body: JSON.stringify({ experiments: selectedIds }) 
+            //    body: JSON.stringify({ targets: selectedTargets }) 
             // });
         }
 
@@ -420,7 +398,7 @@
 
         async function fetchMetrics() {
             try {
-                const response = await fetch('http://localhost:9999/dummy-url-to-force-fail');
+                const response = await fetch('/api/metrics');
                 if (!response.ok) throw new Error('API down');
                 const liveData = await response.json();
                 renderTable(liveData);
