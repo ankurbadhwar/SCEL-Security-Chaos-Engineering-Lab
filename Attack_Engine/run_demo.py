@@ -35,9 +35,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from brute_force_attack import run_brute_force
 from idor_attack import run_idor_attack
+from command_injection_attack import run_command_injection
+from file_upload_attack import run_file_upload
+from csrf_attack import run_csrf_attack
 from db_logger import log_attack, get_all_results, clear_results
 from dashboard_reporter import send_to_dashboard, toggle_control
 from config import TARGET_URL
+from orchestrator import AttackOrchestrator
 
 
 def reset_rate_limit():
@@ -54,6 +58,38 @@ def calculate_resilience(enabled: int, total: int, tte: float, success: bool) ->
     tte_norm = min(tte / 10.0, 1.0)
     success_val = 1 if success else 0
     return round((defense * tte_norm) / (success_val + 1) * 100, 2)
+
+
+# ─── Attack registry ─────────────────────────────────────────────────────────
+# Each entry: fn = callable returning the standard result dict.
+# chaos_controls lists which target controls this attack probes.
+ATTACK_REGISTRY = {
+    "brute_force": {
+        "fn": run_brute_force,
+        "attack_type": "Brute Force Login",
+        "chaos_controls": ["RATE_LIMIT_ENABLED", "INPUT_SANITIZATION_ENABLED"],
+    },
+    "idor": {
+        "fn": run_idor_attack,
+        "attack_type": "IDOR Access",
+        "chaos_controls": ["RBAC_ENABLED"],
+    },
+    "command_injection": {
+        "fn": run_command_injection,
+        "attack_type": "Command Injection",
+        "chaos_controls": ["INPUT_SANITIZATION_ENABLED"],
+    },
+    "file_upload": {
+        "fn": run_file_upload,
+        "attack_type": "Unrestricted File Upload",
+        "chaos_controls": ["INPUT_SANITIZATION_ENABLED"],
+    },
+    "csrf": {
+        "fn": run_csrf_attack,
+        "attack_type": "CSRF Transfer",
+        "chaos_controls": ["CSRF_PROTECTION"],
+    },
+}
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -94,123 +130,28 @@ def print_summary_table(results: list[dict]):
     print()
 
 
-# ─── Phase runners ───────────────────────────────────────────────────────────
+# ─── Phase runners (delegated to AttackOrchestrator) ─────────────────────────
 
-def run_phase_before_chaos(send_dashboard: bool = True):
-    """
-    Phase 1: All security controls ON. Attacks should fail or take a long time.
-    """
-    phase = "before_chaos"
-    enabled = 3
-    total = 3
+def _make_orchestrator() -> AttackOrchestrator:
+    return AttackOrchestrator(ATTACK_REGISTRY, enabled_controls=3, total_controls=3)
 
+
+def run_phase_before_chaos(send_dashboard: bool = True) -> list[dict]:
+    """Phase 1: All controls ON. Attacks should fail / take long."""
     print(PHASE_HEADER.format(
         phase="BEFORE CHAOS (all controls ON)",
-        controls="RATE_LIMIT ✅ | RBAC ✅ | INPUT_SANITIZATION ✅",
+        controls="RATE_LIMIT ✅ | RBAC ✅ | INPUT_SANITIZATION ✅ | CSRF ✅",
     ))
-
-    # Ensure controls are ON
-    toggle_control("RATE_LIMIT_ENABLED", True)
-    toggle_control("RBAC_ENABLED", True)
-    toggle_control("INPUT_SANITIZATION_ENABLED", True)
-    time.sleep(0.5)
-    reset_rate_limit()
-
-    results = []
-
-    # ── Attack 1: Brute Force ────────────────────────────────────────────
-    bf_result = run_brute_force()
-    bf_result["phase"] = phase
-    bf_result["enabled_controls"] = enabled
-    bf_result["total_controls"] = total
-    bf_result["resilience_score"] = calculate_resilience(
-        enabled, total, bf_result["tte"], bf_result["success"]
-    )
-    log_attack(bf_result)
-    if send_dashboard:
-        send_to_dashboard(bf_result, phase=phase,
-                          enabled_controls=enabled, total_controls=total)
-    results.append(bf_result)
-
-    # Reset rate-limit counters for clean IDOR test
-    reset_rate_limit()
-
-    # ── Attack 2: IDOR ───────────────────────────────────────────────────
-    idor_result = run_idor_attack()
-    idor_result["phase"] = phase
-    idor_result["enabled_controls"] = enabled
-    idor_result["total_controls"] = total
-    idor_result["resilience_score"] = calculate_resilience(
-        enabled, total, idor_result["tte"], idor_result["success"]
-    )
-    log_attack(idor_result)
-    if send_dashboard:
-        send_to_dashboard(idor_result, phase=phase,
-                          enabled_controls=enabled, total_controls=total)
-    results.append(idor_result)
-
-    return results
+    return _make_orchestrator().run_before_chaos(send_dashboard)
 
 
-def run_phase_after_chaos(send_dashboard: bool = True):
-    """
-    Phase 2: Disable security controls (chaos injection).
-    Same attacks should now succeed faster.
-    """
-    phase = "after_chaos"
-    enabled = 0
-    total = 3
-
+def run_phase_after_chaos(send_dashboard: bool = True) -> list[dict]:
+    """Phase 2: All controls OFF. Attacks should succeed quickly."""
     print(PHASE_HEADER.format(
         phase="AFTER CHAOS (all controls OFF)",
-        controls="RATE_LIMIT ❌ | RBAC ❌ | INPUT_SANITIZATION ❌",
+        controls="RATE_LIMIT ❌ | RBAC ❌ | INPUT_SANITIZATION ❌ | CSRF ❌",
     ))
-
-    # ── Chaos injection: disable all controls ────────────────────────────
-    print("  💥 INJECTING CHAOS — disabling all security controls...")
-    toggle_control("RATE_LIMIT_ENABLED", False)
-    toggle_control("RBAC_ENABLED", False)
-    toggle_control("INPUT_SANITIZATION_ENABLED", False)
-    time.sleep(0.5)
-    reset_rate_limit()
-
-    results = []
-
-    # ── Attack 1: Brute Force ────────────────────────────────────────────
-    bf_result = run_brute_force()
-    bf_result["phase"] = phase
-    bf_result["enabled_controls"] = enabled
-    bf_result["total_controls"] = total
-    bf_result["resilience_score"] = calculate_resilience(
-        enabled, total, bf_result["tte"], bf_result["success"]
-    )
-    log_attack(bf_result)
-    if send_dashboard:
-        send_to_dashboard(bf_result, phase=phase,
-                          enabled_controls=enabled, total_controls=total)
-    results.append(bf_result)
-
-    # ── Attack 2: IDOR ───────────────────────────────────────────────────
-    idor_result = run_idor_attack()
-    idor_result["phase"] = phase
-    idor_result["enabled_controls"] = enabled
-    idor_result["total_controls"] = total
-    idor_result["resilience_score"] = calculate_resilience(
-        enabled, total, idor_result["tte"], idor_result["success"]
-    )
-    log_attack(idor_result)
-    if send_dashboard:
-        send_to_dashboard(idor_result, phase=phase,
-                          enabled_controls=enabled, total_controls=total)
-    results.append(idor_result)
-
-    # ── Restore controls after test ──────────────────────────────────────
-    print("\n  🔄 Restoring all security controls...")
-    toggle_control("RATE_LIMIT_ENABLED", True)
-    toggle_control("RBAC_ENABLED", True)
-    toggle_control("INPUT_SANITIZATION_ENABLED", True)
-
-    return results
+    return _make_orchestrator().run_after_chaos(send_dashboard)
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -254,6 +195,7 @@ def main():
 
     if args.phase in ("after", "both"):
         all_results.extend(run_phase_after_chaos(send_dashboard))
+
 
     # ── Final Summary ────────────────────────────────────────────────────
     print("\n" + "═" * 70)

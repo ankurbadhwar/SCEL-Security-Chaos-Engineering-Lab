@@ -264,17 +264,25 @@
             </table>
 
             <div class="px-7 py-5 bg-[#0b0e14]/50 border-t border-white/5 flex items-center justify-between">
-                <p class="text-xs text-slate-500 font-mono"><span id="selected-count"
-                        class="text-cyan-400 font-bold">0</span> experiments queued for execution.</p>
-                <button id="execute-btn" onclick="executeChaos()"
-                    class="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-bold text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    EXECUTE CHAOS
-                </button>
+                <div class="flex items-center gap-4">
+                    <p class="text-xs text-slate-500 font-mono"><span id="selected-count" class="text-cyan-400 font-bold">0</span> experiments queued.</p>
+                    <p id="orch-status-text" class="text-xs font-mono text-slate-600"></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="phase-select" class="bg-[#0c0f15] border border-white/10 rounded-lg px-3 pr-7 py-2 text-xs font-semibold text-slate-300 focus:outline-none cursor-pointer">
+                        <option value="both">Both Phases</option>
+                        <option value="before">Before Chaos</option>
+                        <option value="after">After Chaos</option>
+                    </select>
+                    <button id="stop-btn" onclick="stopChaos()" class="hidden items-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-400 hover:text-red-300 font-bold text-sm transition-all">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><rect x="6" y="6" width="8" height="8" rx="1"/></svg>
+                        STOP
+                    </button>
+                    <button id="execute-btn" onclick="executeChaos()" class="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-bold text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                        EXECUTE CHAOS
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -288,129 +296,108 @@
     </div>
 
     <script>
-        const mockChaosData = [
-            { target: 'auth-service', blastRadius: 'Isolated', status: 'Running', timeToExploit: 'N/A', enabled: false },
-            { target: 'payment-gw', blastRadius: 'High', status: 'Mitigated', timeToExploit: '14.2s', highlight: true, enabled: true },
-            { target: 'user-db', blastRadius: 'Low', status: 'Passed', timeToExploit: 'Timeout (Safe)', enabled: false },
-            { target: 'kafka-cluster', blastRadius: 'Medium', status: 'Failed', timeToExploit: '2.1s', enabled: true },
-            { target: 'profile-api (CSRF - Cross-Site Request Forgery)', blastRadius: 'Medium', status: 'Mitigated', timeToExploit: '5.4s', enabled: false },
-            { target: 'document-api (IDOR - Insecure Direct Object Reference)', blastRadius: 'High', status: 'Failed', timeToExploit: '1.8s', enabled: true },
-            { target: 'session-store (Broken Auth)', blastRadius: 'High', status: 'Running', timeToExploit: 'N/A', enabled: false }
-        ];
+        const ATTACK_NAME_MAP = {'Brute Force Login':'brute_force','IDOR Access':'idor','Command Injection':'command_injection','Unrestricted File Upload':'file_upload','CSRF Transfer':'csrf'};
+        let pollTimer = null;
 
         function getBlastBadge(radius) {
-            const r = radius.toUpperCase();
-            const map = {
-                'HIGH': 'bg-red-500/15 text-red-400 border-red-500/25',
-                'MEDIUM': 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-                'LOW': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-                'ISOLATED': 'bg-sky-500/15 text-sky-400 border-sky-500/25'
-            };
+            const r = (radius||'Medium').toUpperCase();
+            const map = {'HIGH':'bg-red-500/15 text-red-400 border-red-500/25','MEDIUM':'bg-amber-500/15 text-amber-400 border-amber-500/25','LOW':'bg-emerald-500/15 text-emerald-400 border-emerald-500/25','ISOLATED':'bg-sky-500/15 text-sky-400 border-sky-500/25'};
             const cls = map[r] || 'bg-slate-500/15 text-slate-400 border-slate-500/25';
             return `<span class="inline-block px-2.5 py-0.5 border rounded text-[10px] font-bold uppercase tracking-wide ${cls}">${radius}</span>`;
         }
-
         function getStatusBadge(status) {
-            const icons = {
-                'Running': `<svg class="w-3.5 h-3.5 pulse-dot" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,
-                'Mitigated': `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
-                'Passed': `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
-                'Failed': `<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`
-            };
-            const colors = {
-                'Running': 'text-sky-400',
-                'Mitigated': 'text-emerald-400',
-                'Passed': 'text-emerald-400',
-                'Failed': 'text-red-400'
-            };
-            const color = colors[status] || 'text-slate-400';
-            const icon = icons[status] || '';
-            return `<span class="flex items-center gap-1.5 text-sm font-semibold ${color}">${icon} ${status}</span>`;
+            const icons = {'Running':`<svg class="w-3.5 h-3.5 pulse-dot" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,'Mitigated':`<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,'Passed':`<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,'Failed':`<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`};
+            const colors = {'Running':'text-sky-400','Mitigated':'text-emerald-400','Passed':'text-emerald-400','Failed':'text-red-400'};
+            return `<span class="flex items-center gap-1.5 text-sm font-semibold ${colors[status]||'text-slate-400'}">${icons[status]||''} ${status}</span>`;
         }
-
         function renderTable(data) {
             const tbody = document.getElementById('metrics-table-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                const hlClass = row.highlight ? 'row-highlight' : '';
-                tr.className = `hover:bg-white/[0.03] transition-colors ${hlClass}`;
-
-                const dots = row.highlight ? `<button class="text-slate-500 hover:text-slate-300 transition-colors"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/></svg></button>` : '';
-
+                tr.className = 'hover:bg-white/[0.03] transition-colors';
                 tr.innerHTML = `
-                    <td class="px-7 py-4 text-center">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer chaos-toggle" value="${row.target}" ${row.enabled ? 'checked' : ''} onchange="updateQueueCount()">
-                            <div class="w-8 h-4 bg-[#1a1f28] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-gray-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500/80 peer-checked:border-cyan-500"></div>
-                        </label>
-                    </td>
+                    <td class="px-7 py-4 text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer chaos-toggle" value="${row.target}" ${row.enabled?'checked':''} onchange="updateQueueCount()"><div class="w-8 h-4 bg-[#1a1f28] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-gray-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500/80 peer-checked:border-cyan-500"></div></label></td>
                     <td class="px-7 py-4 text-sm font-mono text-cyan-400">${row.target}</td>
                     <td class="px-7 py-4">${getBlastBadge(row.blastRadius)}</td>
                     <td class="px-7 py-4 text-sm font-mono text-slate-400">${row.timeToExploit}</td>
                     <td class="px-7 py-4">${getStatusBadge(row.status)}</td>
-                    <td class="px-7 py-4 text-right">${dots}</td>
-                `;
+                    <td class="px-7 py-4"></td>`;
                 tbody.appendChild(tr);
             });
             updateQueueCount();
         }
-
         function updateQueueCount() {
-            const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
-            document.getElementById('selected-count').textContent = checkboxes.length;
+            const c = document.querySelectorAll('.chaos-toggle:checked');
+            document.getElementById('selected-count').textContent = c.length;
         }
-
-        function executeChaos() {
-            const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
-            const selectedTargets = Array.from(checkboxes).map(cb => cb.value);
-
-            if (selectedTargets.length === 0) {
-                alert("Please select at least one vulnerability to test.");
-                return;
-            }
-
-            console.log("Preparing to execute chaos on:", selectedTargets);
-            alert(`Executing Chaos Orchestrator for: \n${selectedTargets.join(', ')}`);
-
-            // fetch('/api/execute', { 
-            //    method: 'POST', 
-            //    body: JSON.stringify({ targets: selectedTargets }) 
-            // });
-        }
-
         function updateStatus(state) {
             const indicator = document.getElementById('status-indicator');
             if (!indicator) return;
             const dot = indicator.previousElementSibling;
-            if (state === 'live') {
-                indicator.textContent = 'Live Telemetry';
-                indicator.className = 'text-[11px] font-bold text-emerald-400 uppercase tracking-wide';
-                if (dot) { dot.className = 'w-2 h-2 rounded-full bg-emerald-400 pulse-dot'; }
-            } else {
-                indicator.textContent = 'Mock Mode';
-                indicator.className = 'text-[11px] font-bold text-amber-400 uppercase tracking-wide';
-                if (dot) { dot.className = 'w-2 h-2 rounded-full bg-amber-400 pulse-dot'; }
-            }
+            if (state === 'live') { indicator.textContent='Live Telemetry'; indicator.className='text-[11px] font-bold text-emerald-400 uppercase tracking-wide'; if(dot) dot.className='w-2 h-2 rounded-full bg-emerald-400 pulse-dot'; }
+            else if (state === 'running') { indicator.textContent='Running'; indicator.className='text-[11px] font-bold text-sky-400 uppercase tracking-wide'; if(dot) dot.className='w-2 h-2 rounded-full bg-sky-400 pulse-dot'; }
+            else { indicator.textContent='Mock Mode'; indicator.className='text-[11px] font-bold text-amber-400 uppercase tracking-wide'; if(dot) dot.className='w-2 h-2 rounded-full bg-amber-400 pulse-dot'; }
         }
+        function setOrchStatus(text) { const el = document.getElementById('orch-status-text'); if(el) el.textContent = text; }
+        function showStopBtn(show) {
+            const sb = document.getElementById('stop-btn'), eb = document.getElementById('execute-btn');
+            if(sb) sb.className = show ? sb.className.replace('hidden','flex') : sb.className.replace('flex','hidden');
+            if(eb) eb.style.display = show ? 'none' : 'flex';
+        }
+
+        async function executeChaos() {
+            const checkboxes = document.querySelectorAll('.chaos-toggle:checked');
+            const selectedTargets = Array.from(checkboxes).map(cb => cb.value);
+            const phase = document.getElementById('phase-select').value;
+            if (selectedTargets.length === 0) { alert('Select at least one experiment.'); return; }
+            const attacks = selectedTargets.map(t => ATTACK_NAME_MAP[t]).filter(Boolean);
+            try {
+                const r = await fetch('/api/execute', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phase, attacks: attacks.length ? attacks : undefined})});
+                const data = await r.json();
+                if (r.ok) { setOrchStatus(`Run ${data.run_id} started`); showStopBtn(true); startPolling(); }
+                else { alert(data.error || data.message || 'Execute failed'); }
+            } catch(e) { alert('Engine API unreachable'); }
+        }
+        async function stopChaos() {
+            try { await fetch('/api/stop', {method:'POST'}); setOrchStatus('Stopping...'); } catch(e) {}
+        }
+        async function pollStatus() {
+            try {
+                const r = await fetch('/api/orchestrator/status');
+                const s = await r.json();
+                if (s.status === 'running') {
+                    updateStatus('running');
+                    setOrchStatus(`${s.current_attack||'...'} (${s.progress||0}%)`);
+                    fetchMetrics();
+                } else if (s.status === 'completed' || s.status === 'failed') {
+                    stopPolling(); showStopBtn(false);
+                    setOrchStatus(s.status === 'completed' ? 'Run completed' : `Failed: ${s.error||'unknown'}`);
+                    updateStatus('live'); fetchMetrics();
+                } else if (s.status === 'idle') {
+                    stopPolling(); showStopBtn(false); setOrchStatus('');
+                }
+            } catch(e) {}
+        }
+        function startPolling() { if(pollTimer) return; pollTimer = setInterval(pollStatus, 3000); }
+        function stopPolling() { if(pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
         async function fetchMetrics() {
             try {
-                const response = await fetch('/api/metrics');
-                if (!response.ok) throw new Error('API down');
-                const liveData = await response.json();
-                renderTable(liveData);
-                updateStatus('live');
-            } catch (error) {
-                console.log('Orchestrator not detected. Falling back to Mock Data.');
-                renderTable(mockChaosData);
-                updateStatus('mock');
-            }
+                const r = await fetch('/api/metrics');
+                if (!r.ok) throw new Error('API down');
+                const data = await r.json();
+                if (data.length > 0) { renderTable(data); updateStatus('live'); }
+                else { updateStatus('live'); }
+            } catch(e) { updateStatus('mock'); }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchMetrics);
+        document.getElementById('refresh-btn').addEventListener('click', fetchMetrics);
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchMetrics();
+            try { const r = await fetch('/api/orchestrator/status'); const s = await r.json(); if(s.status==='running'){showStopBtn(true);startPolling();} } catch(e){}
+        });
     </script>
 </body>
 

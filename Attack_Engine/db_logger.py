@@ -93,3 +93,88 @@ def clear_results():
     conn.execute("DELETE FROM attack_results")
     conn.commit()
     conn.close()
+
+
+# ─── Orchestration Runs ─────────────────────────────────────────────────────
+
+def _init_runs_table():
+    """Create the orchestration_runs table if it does not exist."""
+    conn = _get_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS orchestration_runs (
+            run_id          TEXT    PRIMARY KEY,
+            start_time      TEXT    NOT NULL,
+            end_time        TEXT,
+            phase           TEXT    NOT NULL,
+            status          TEXT    NOT NULL,
+            attacks         TEXT,
+            config          TEXT,
+            error           TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def log_run_start(run_id: str, phase: str, attacks: list, config: dict = None):
+    """Record the start of an orchestration run."""
+    _init_runs_table()
+    import json as _json
+    conn = _get_connection()
+    conn.execute("""
+        INSERT INTO orchestration_runs
+            (run_id, start_time, phase, status, attacks, config)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        run_id,
+        datetime.now().isoformat(),
+        phase,
+        "running",
+        _json.dumps(attacks),
+        _json.dumps(config) if config else None,
+    ))
+    conn.commit()
+    conn.close()
+
+
+def log_run_end(run_id: str, status: str, error: str = None):
+    """Record the completion of an orchestration run."""
+    _init_runs_table()
+    conn = _get_connection()
+    conn.execute("""
+        UPDATE orchestration_runs
+        SET end_time = ?, status = ?, error = ?
+        WHERE run_id = ?
+    """, (
+        datetime.now().isoformat(),
+        status,
+        error,
+        run_id,
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_run_history(limit: int = 50):
+    """Return recent orchestration runs as a list of dicts."""
+    _init_runs_table()
+    conn = _get_connection()
+    rows = conn.execute(
+        "SELECT * FROM orchestration_runs ORDER BY start_time DESC LIMIT ?",
+        (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_results_by_run(run_id: str):
+    """Return attack results that were logged during a specific run."""
+    init_db()
+    conn = _get_connection()
+    rows = conn.execute(
+        "SELECT * FROM attack_results WHERE details LIKE ? OR id IN "
+        "(SELECT id FROM attack_results ORDER BY id DESC LIMIT 20)",
+        (f"%{run_id}%",)
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]

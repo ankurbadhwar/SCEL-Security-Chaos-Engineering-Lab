@@ -1,73 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCEL Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #0f172a;
-            font-family: Arial;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-        }
-
-        .box {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 10px;
-            width: 300px;
-            text-align: center;
-        }
-
-        input {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #3b82f6;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #2563eb;
-        }
+        body { font-family: 'Inter', sans-serif; background: #0a0d13; color: #cbd5e1; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .card-log { background: linear-gradient(135deg, #111827 0%, #0f1219 100%); border: 1px solid rgba(56, 189, 248, 0.15); box-shadow: 0 0 30px rgba(56, 189, 248, 0.03); }
+        body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; z-index: -1; }
     </style>
 </head>
+<body class="selection:bg-amber-500/30 min-h-screen flex items-center justify-center p-4">
 
-<body>
-    <div class="box">
-        <h2>SCEL Login</h2>
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div class="absolute top-[-15%] right-[-5%] w-[35%] h-[35%] bg-blue-600/[0.04] blur-[150px] rounded-full"></div>
+        <div class="absolute bottom-[-15%] left-[-5%] w-[35%] h-[35%] bg-red-600/[0.04] blur-[150px] rounded-full"></div>
+        <div class="absolute top-[40%] left-[30%] w-[20%] h-[20%] bg-emerald-600/[0.02] blur-[100px] rounded-full"></div>
+    </div>
 
-        <form method="POST" action="/login-ui">
-            <input type="text" name="username" placeholder="Username" value="{{username}}"><br>
-            <input type="password" name="password" placeholder="Password"><br>
-            <button type="submit">Login</button>
+    <div class="card-log rounded-xl p-8 w-full max-w-md">
+        <div class="flex items-center gap-3 mb-8 justify-center">
+            <span class="text-2xl">🛡️</span>
+            <h2 class="text-xl font-bold text-white tracking-tight">SCEL Login</h2>
+        </div>
+
+        <form method="POST" action="/login-ui" class="space-y-5">
+            <div>
+                <input type="text" name="username" placeholder="Username" value="{{ username }}" class="w-full bg-[#1a1f28] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors">
+            </div>
+            <div>
+                <input type="password" name="password" placeholder="Password" class="w-full bg-[#1a1f28] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors">
+            </div>
+            <button type="submit" class="w-full flex justify-center items-center gap-2 px-6 py-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-bold text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                AUTHENTICATE
+            </button>
         </form>
 
-        <p>{{ message }}</p>
-        {% if cleaned %}
-    <div style="margin-top:15px; padding:10px; background:#334155; border-radius:8px;">
-        <p><strong>Original Input:</strong> {{ username }}</p>
-        <p><strong>Cleaned Input:</strong> {{ cleaned }}</p>
+        {% if message %}
+        <p class="mt-6 text-center text-sm font-medium text-amber-400">{{ message }}</p>
+        {% endif %}
 
-        {% if attack %}
-            <p style="color:#ef4444;">⚠️ Suspicious input detected!</p>
-        {% else %}
-            <p style="color:#22c55e;">✅ Input looks safe</p>
+        {% if cleaned %}
+        <div class="mt-6 p-4 bg-[#0c0f15] border border-white/5 rounded-lg space-y-2">
+            <p class="text-xs text-slate-400"><strong class="text-slate-300">Original Input:</strong> <span class="font-mono text-cyan-400 break-all">{{ username }}</span></p>
+            <p class="text-xs text-slate-400"><strong class="text-slate-300">Cleaned Input:</strong> <span class="font-mono text-emerald-400 break-all">{{ cleaned }}</span></p>
+
+            {% if attack %}
+                <p class="text-xs font-bold text-red-400 flex items-center gap-1.5 mt-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Suspicious input detected!
+                </p>
+            {% else %}
+                <p class="text-xs font-bold text-emerald-400 flex items-center gap-1.5 mt-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Input looks safe
+                </p>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-{% endif %}
-    </div>
+
 </body>
 </html>

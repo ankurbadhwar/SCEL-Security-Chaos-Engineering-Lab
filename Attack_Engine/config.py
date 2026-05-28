@@ -9,8 +9,12 @@ Update DASHBOARD_URL to match where the Metrics Dashboard is running.
 # ─── Target Webapp ───────────────────────────────────────────────────────────
 TARGET_URL = "http://127.0.0.1:5000"
 
-# ─── Metrics Dashboard (Member 1's machine) ─────────────────────────────────
-DASHBOARD_URL = "http://192.168.1.5:5001"
+# ─── Metrics Dashboard ───────────────────────────────────────────────────────
+DASHBOARD_URL = "http://127.0.0.1:5001"
+
+# ─── Engine API Server ───────────────────────────────────────────────────────
+ENGINE_API_PORT = 5002
+ENGINE_API_KEY = "scel-engine-key-2024"
 
 # ─── Hardcoded Users (must match Target_webapp/models/users.py) ──────────────
 USERS = {

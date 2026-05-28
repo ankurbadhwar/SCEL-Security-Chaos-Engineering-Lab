@@ -155,3 +155,19 @@ docker-compose.override.yml
 *.tmp
 *.temp
 .cache/
+
+# ========================================
+# SCEL Generated Artifacts
+# ========================================
+Attack_Engine/attack_results.db
+Attack_Engine/results_summary.json
+Metrics/metrics.db
+Target_webapp/static/uploads/
+app/static/uploads/
+app
+start_scel.sh
+
+# ========================================
+# Markdown Files
+# ========================================
+*.md

