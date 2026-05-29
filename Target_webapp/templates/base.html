@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}SCEL Target Webapp{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .font-mono, code, pre { font-family: 'JetBrains Mono', monospace; }
+
+        body {
+            background: #080b10;
+            min-height: 100vh;
+        }
+
+        /* Ambient background glows */
+        .bg-ambient::before {
+            content: '';
+            position: fixed;
+            top: -10%;
+            right: -5%;
+            width: 35%;
+            height: 35%;
+            background: radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-ambient::after {
+            content: '';
+            position: fixed;
+            bottom: -10%;
+            left: -5%;
+            width: 35%;
+            height: 35%;
+            background: radial-gradient(circle, rgba(220,38,38,0.04) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Pulse animation for status dots */
+        @keyframes pulse-ring {
+            0%   { transform: scale(1); opacity: 1; }
+            70%  { transform: scale(2.2); opacity: 0; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        .pulse-dot::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: inherit;
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        .pulse-dot { position: relative; }
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: all;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.625rem;
+            border: 1px solid;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            backdrop-filter: blur(12px);
+            animation: toast-in 0.25s ease forwards;
+            max-width: 22rem;
+        }
+        .toast.success {
+            background: rgba(16,185,129,0.12);
+            border-color: rgba(16,185,129,0.35);
+            color: #6ee7b7;
+        }
+        .toast.error {
+            background: rgba(239,68,68,0.12);
+            border-color: rgba(239,68,68,0.35);
+            color: #fca5a5;
+        }
+        .toast.info {
+            background: rgba(99,102,241,0.12);
+            border-color: rgba(99,102,241,0.35);
+            color: #a5b4fc;
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(1rem); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(1rem); }
+        }
+        .toast.removing { animation: toast-out 0.25s ease forwards; }
+
+        /* Card glass style */
+        .card {
+            background: rgba(15,18,27,0.85);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        {% block extra_style %}{% endblock %}
+    </style>
+</head>
+<body class="bg-ambient text-slate-300">
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    {% block body %}{% endblock %}
+
+    <script>
+        // ── Toast System ───────────────────────────────────────────────────
+        function showToast(message, type = 'info', duration = 3500) {
+            const icons = {
+                success: `<svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
+                error:   `<svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`,
+                info:    `<svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>`,
+            };
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `${icons[type] || icons.info}<span>${message}</span>`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('removing');
+                el.addEventListener('animationend', () => el.remove());
+            }, duration);
+        }
+
+        // ── Async Toggle Helper ────────────────────────────────────────────
+        async function toggleControl(control, btn) {
+            const currentVal = btn.dataset.active === 'true';
+            const newVal = !currentVal;
+            try {
+                const r = await fetch('/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ control, value: newVal }),
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    btn.dataset.active = String(newVal);
+                    updateToggleBtnStyle(btn, newVal);
+                    showToast(`${control} → ${newVal ? 'ENABLED' : 'DISABLED'}`, newVal ? 'success' : 'error');
+                } else {
+                    showToast(data.error || 'Toggle failed', 'error');
+                }
+            } catch (e) {
+                showToast('Cannot reach server', 'error');
+            }
+        }
+
+        function updateToggleBtnStyle(btn, active) {
+            if (active) {
+                btn.classList.remove('border-red-500/40', 'text-red-400', 'bg-red-500/10', 'hover:bg-red-500/20');
+                btn.classList.add('border-emerald-500/40', 'text-emerald-400', 'bg-emerald-500/10', 'hover:bg-emerald-500/20');
+                btn.textContent = btn.dataset.label + ' ✓';
+            } else {
+                btn.classList.remove('border-emerald-500/40', 'text-emerald-400', 'bg-emerald-500/10', 'hover:bg-emerald-500/20');
+                btn.classList.add('border-red-500/40', 'text-red-400', 'bg-red-500/10', 'hover:bg-red-500/20');
+                btn.textContent = btn.dataset.label + ' ✗';
+            }
+        }
+    </script>
+
+    {% block extra_script %}{% endblock %}
+</body>
+</html>

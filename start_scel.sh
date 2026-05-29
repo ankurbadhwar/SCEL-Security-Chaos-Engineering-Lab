@@ -4,8 +4,8 @@
 #   One-click launcher — opens 3 terminals and runs everything
 # ============================================================================
 
-PROJECT_DIR="/mnt/data/SCEL-Security-Chaos-Engineering-Lab"
-CONDA_ENV="$PROJECT_DIR/conda_env"
+PROJECT_DIR="/home/bloop/Downloads/SCEL-Security-Chaos-Engineering-Lab"
+CONDA_ENV="/home/bloop/Downloads/miniconda3"
 PYTHON="$CONDA_ENV/bin/python"
 
 # ── Colors for output ───────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ echo ""
 # ── Check conda env exists ──────────────────────────────────────────────────
 if [ ! -f "$PYTHON" ]; then
     echo -e "${RED}ERROR: Conda Python not found at $PYTHON${NC}"
-    echo "Make sure the conda_env directory exists in the project."
+    echo "Install Miniconda: bash /home/bloop/Downloads/miniconda.sh -b -p $CONDA_ENV"
     exit 1
 fi
 
@@ -150,7 +150,7 @@ echo '════════════════════════�
 echo ''
 cd $PROJECT_DIR/Attack_Engine
 export PATH=$CONDA_ENV/bin:\$PATH
-$PYTHON run_demo.py --no-dashboard --clear-db
+$PYTHON run_demo.py --clear-db
 echo ''
 echo '══════════════════════════════════════════════════════════'
 echo '  Demo complete! You can review the results above.'
@@ -165,14 +165,34 @@ read
 
 launch_in_terminal "SCEL - Attack Engine" "$ATTACK_CMD" "$TERM_EMU"
 
+# ── Terminal 4: Engine API Server (port 5002) ────────────────────────────────
+echo -e "${YELLOW}[4/4] Starting Engine API Server (port 5002)...${NC}"
+
+ENGINE_CMD="
+echo '══════════════════════════════════════════════════════════'
+echo '  SCEL — Engine API Server'
+echo '  Port: 5002'
+echo '══════════════════════════════════════════════════════════'
+echo ''
+cd $PROJECT_DIR/Attack_Engine
+export PATH=$CONDA_ENV/bin:\$PATH
+$PYTHON engine_api.py
+echo ''
+echo 'Press Enter to close...'
+read
+"
+
+launch_in_terminal "SCEL - Engine API" "$ENGINE_CMD" "$TERM_EMU"
+
 # ── Done ────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║   All 3 components launched!                             ║${NC}"
+echo -e "${GREEN}║   All 4 components launched!                             ║${NC}"
 echo -e "${GREEN}║                                                          ║${NC}"
 echo -e "${GREEN}║   Terminal 1: Target Webapp     → http://localhost:5000   ║${NC}"
 echo -e "${GREEN}║   Terminal 2: Metrics Dashboard → http://localhost:5001   ║${NC}"
 echo -e "${GREEN}║   Terminal 3: Attack Engine     → running demo...        ║${NC}"
+echo -e "${GREEN}║   Terminal 4: Engine API        → http://localhost:5002   ║${NC}"
 echo -e "${GREEN}║                                                          ║${NC}"
 echo -e "${GREEN}║   Close terminals to stop the servers.                   ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════╝${NC}"

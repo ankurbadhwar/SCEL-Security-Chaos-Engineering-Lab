@@ -1,62 +1,123 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Money Transfer | SCEL</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0d13; color: #cbd5e1; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .card-baseline { background: linear-gradient(135deg, #111827 0%, #0f1219 100%); border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16, 185, 129, 0.05), inset 0 1px 0 rgba(16, 185, 129, 0.1); }
-        .card-chaos { background: linear-gradient(135deg, #111827 0%, #0f1219 100%); border: 1px solid rgba(239, 68, 68, 0.3); box-shadow: 0 0 20px rgba(239, 68, 68, 0.05), inset 0 1px 0 rgba(239, 68, 68, 0.1); }
-        body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; z-index: -1; }
-    </style>
-</head>
-<body class="selection:bg-amber-500/30 min-h-screen flex items-center justify-center p-4">
+{% extends 'base.html' %}
+{% block title %}SCEL — Money Transfer{% endblock %}
 
-    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
-        <div class="absolute top-[-15%] right-[-5%] w-[35%] h-[35%] bg-blue-600/[0.04] blur-[150px] rounded-full"></div>
-        <div class="absolute bottom-[-15%] left-[-5%] w-[35%] h-[35%] bg-emerald-600/[0.03] blur-[150px] rounded-full"></div>
-    </div>
+{% block body %}
+<div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-lg">
 
-    <div class="{% if csrf %}card-baseline{% else %}card-chaos{% endif %} rounded-xl p-8 w-full max-w-md">
-        
-        <div class="flex items-center gap-3 mb-6 justify-center">
-            <span class="text-2xl">💸</span>
-            <h2 class="text-xl font-bold text-white tracking-tight">Transfer Money</h2>
-        </div>
-
-        <div class="mb-6 flex justify-center">
-            {% if csrf %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/25 rounded text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    CSRF Protection Enabled
-                </span>
-            {% else %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/25 rounded text-[11px] font-bold text-red-400 uppercase tracking-wider">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    CSRF Protection Disabled
-                </span>
-            {% endif %}
-        </div>
-
-        <form method="POST" action="/transfer" class="space-y-5">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
             <div>
-                <input type="text" name="amount" placeholder="Enter amount" class="w-full bg-[#1a1f28] border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono font-bold uppercase tracking-widest mb-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot inline-block"></span>
+                    {% if csrf %}CSRF Protection: ON{% else %}⚠ CSRF Protection: OFF{% endif %}
+                </div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Money Transfer</h1>
+                <p class="text-sm text-slate-500 mt-1">Initiate a secure fund transfer</p>
             </div>
+            <a href="/profile-ui/{{ session.user_id or 1 }}"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-xs text-slate-400 hover:text-white hover:border-white/25 transition-all font-mono">
+                ← Back
+            </a>
+        </div>
 
-            {% if csrf %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            {% endif %}
+        <!-- Alert / Success -->
+        {% if success %}
+        <div class="flex items-center gap-3 mb-6 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            <span>{{ success }}</span>
+        </div>
+        {% endif %}
 
-            <button type="submit" class="w-full flex justify-center items-center gap-2 px-6 py-3 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/50 text-sky-400 hover:text-sky-300 font-bold text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(14,165,233,0.1)] hover:shadow-[0_0_20px_rgba(14,165,233,0.2)]">
-                INITIATE TRANSFER
-            </button>
-        </form>
+        {% if error %}
+        <div class="flex items-center gap-3 mb-6 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
 
+        <!-- Balance card -->
+        <div class="card px-6 py-4 mb-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-0.5">Current Balance</p>
+                <p class="text-2xl font-bold text-white font-mono">${{ "{:,.2f}".format(balance or 0) }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+            </div>
+        </div>
+
+        <!-- Transfer form -->
+        <div class="card p-8 shadow-2xl">
+            <form method="POST" action="/transfer" id="transfer-form">
+                {% if csrf %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                {% endif %}
+
+                <!-- Recipient -->
+                <div class="mb-5">
+                    <label for="recipient" class="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Recipient Username</label>
+                    <input
+                        type="text" id="recipient" name="recipient" required autocomplete="off"
+                        placeholder="e.g. user1"
+                        class="w-full px-4 py-3 bg-[#0c0f17] border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                    />
+                </div>
+
+                <!-- Amount -->
+                <div class="mb-7">
+                    <label for="amount" class="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Amount (USD)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-mono text-sm">$</span>
+                        <input
+                            type="number" id="amount" name="amount" required
+                            min="1" step="0.01" placeholder="0.00"
+                            class="w-full pl-8 pr-4 py-3 bg-[#0c0f17] border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all font-mono"
+                        />
+                    </div>
+                </div>
+
+                <button id="transfer-btn" type="submit"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-amber-900/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8 5a1 1 0 100 2h5.586l-1.293 1.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L13.586 5H8zM12 15a1 1 0 100-2H6.414l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L6.414 15H12z"/></svg>
+                    INITIATE TRANSFER
+                </button>
+            </form>
+        </div>
+
+        <!-- CSRF debug panel (only shows when protection OFF — intentional for attack demo) -->
+        {% if not csrf %}
+        <div class="mt-4 card px-5 py-4 border-red-500/20">
+            <p class="text-xs font-mono text-red-400 font-bold mb-1">⚠ CSRF PROTECTION DISABLED</p>
+            <p class="text-xs text-slate-500">Token validation is off. This endpoint is vulnerable to cross-site request forgery.</p>
+        </div>
+        {% endif %}
     </div>
+</div>
+{% endblock %}
 
-</body>
-</html>
+{% block extra_script %}
+<script>
+    document.getElementById('transfer-form').addEventListener('submit', function(e) {
+        const amount = parseFloat(document.getElementById('amount').value);
+        const recipient = document.getElementById('recipient').value.trim();
+
+        if (!recipient) {
+            e.preventDefault();
+            showToast('Please enter a recipient username.', 'error');
+            return;
+        }
+        if (!amount || amount <= 0) {
+            e.preventDefault();
+            showToast('Please enter a valid positive amount.', 'error');
+            return;
+        }
+
+        // Confirmation prompt
+        const confirmed = confirm(`Transfer $${amount.toFixed(2)} to "${recipient}"?\n\nThis action cannot be undone.`);
+        if (!confirmed) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

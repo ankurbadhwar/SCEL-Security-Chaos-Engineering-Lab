@@ -1,31 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Tool | SCEL</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0d13; color: #cbd5e1; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .card-log { background: linear-gradient(135deg, #111827 0%, #0f1219 100%); border: 1px solid rgba(56, 189, 248, 0.15); box-shadow: 0 0 30px rgba(56, 189, 248, 0.03); }
-        body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; z-index: -1; }
-    </style>
-</head>
-<body class="selection:bg-amber-500/30 min-h-screen flex items-center justify-center p-4">
-
-    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
-        <div class="absolute top-[-15%] right-[-5%] w-[35%] h-[35%] bg-blue-600/[0.04] blur-[150px] rounded-full"></div>
-    </div>
-
+{% extends 'base.html' %}
+{% block title %}SCEL — File Upload Tool{% endblock %}
+{% block extra_style %}
+.card-log { background:linear-gradient(135deg,#111827 0%,#0f1219 100%); border:1px solid rgba(56,189,248,0.15); box-shadow:0 0 30px rgba(56,189,248,0.03); }
+body::before { content:''; position:fixed; inset:0; background-image:radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px); background-size:30px 30px; pointer-events:none; z-index:-1; }
+{% endblock %}
+{% block body %}
+<div class="relative z-10 min-h-screen flex items-center justify-center p-4">
     <div class="card-log rounded-xl p-8 w-full max-w-md">
-        
         <div class="flex items-center gap-3 mb-8 border-b border-white/5 pb-4">
-            <span class="text-2xl text-sky-400">
+            <span class="text-sky-400">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
             </span>
-            <h2 class="text-lg font-bold text-white tracking-tight">Upload File Tool</h2>
+            <h1 class="text-lg font-bold text-white tracking-tight">Upload File Tool</h1>
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -35,13 +21,12 @@
                         <svg class="w-8 h-8 mb-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                         <p class="mb-2 text-sm text-slate-400"><span class="font-semibold text-sky-400">Click to upload</span> or drag and drop</p>
                     </div>
-                    <input type="file" name="file" class="hidden" onchange="document.getElementById('filename').textContent = this.files[0]?.name || ''">
+                    <input type="file" name="file" class="hidden" onchange="document.getElementById('filename').textContent = this.files[0]?.name || ''"/>
                 </label>
             </div>
-            
             <p id="filename" class="text-center text-xs font-mono text-cyan-400 min-h-[16px]"></p>
 
-            <button type="submit" class="w-full flex justify-center items-center gap-2 px-6 py-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-bold text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+            <button type="submit" class="w-full flex justify-center items-center gap-2 px-6 py-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-bold text-sm tracking-wide transition-all">
                 UPLOAD
             </button>
         </form>
@@ -51,8 +36,6 @@
             <p class="text-sm font-medium {% if '✅' in message %}text-emerald-400{% else %}text-red-400{% endif %}">{{ message }}</p>
         </div>
         {% endif %}
-
     </div>
-
-</body>
-</html>
+</div>
+{% endblock %}
