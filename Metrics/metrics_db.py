@@ -71,10 +71,23 @@ def save_experiment(phase: str, data: dict):
 
 
 def load_experiments():
-    """Load all experiments grouped by phase. Returns dict matching in-memory structure."""
+    """Load the most-recent result per (phase, attack_type) from SQLite.
+    
+    Deliberately returns only the latest entry for each attack in each phase
+    so that old runs don’t inflate the live dashboard view.
+    """
     init_db()
     conn = _get_connection()
-    rows = conn.execute("SELECT * FROM experiments ORDER BY id").fetchall()
+    # Subquery: for each (phase, attack_type) pick the row with the highest id
+    rows = conn.execute("""
+        SELECT e.* FROM experiments e
+        INNER JOIN (
+            SELECT phase, attack_type, MAX(id) AS max_id
+            FROM experiments
+            GROUP BY phase, attack_type
+        ) latest ON e.id = latest.max_id
+        ORDER BY e.id
+    """).fetchall()
     conn.close()
 
     result = {"before_chaos": [], "after_chaos": []}

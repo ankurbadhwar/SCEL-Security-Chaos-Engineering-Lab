@@ -145,7 +145,7 @@
                                     fill="url(#sparkG)" />
                             </svg>
                             <div class="flex items-center gap-1">
-                                <span class="text-xl font-mono font-bold text-emerald-400">98.5%</span>
+                                <span id="before-resilience" class="text-xl font-mono font-bold text-emerald-400">100.0%</span>
                                 <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor"
                                     stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -156,7 +156,7 @@
                     </div>
                     <div class="flex justify-between items-center border-b border-white/5 py-3.5">
                         <span class="text-sm text-slate-400">Active Vulnerabilities</span>
-                        <span class="text-lg font-mono font-bold text-cyan-300">0</span>
+                        <span id="before-vulns" class="text-lg font-mono font-bold text-cyan-300">0</span>
                     </div>
                     <div class="flex justify-between items-center py-3.5">
                         <span class="text-sm text-slate-400">Target Node Health</span>
@@ -180,7 +180,7 @@
                         <div class="flex justify-between items-center border-b border-white/5 py-3.5">
                             <span class="text-sm text-slate-400">System Resilience</span>
                             <div class="flex items-center gap-1">
-                                <span class="text-xl font-mono font-bold text-red-400">64.2%</span>
+                                <span id="after-resilience" class="text-xl font-mono font-bold text-red-400">--%</span>
                                 <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor"
                                     stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -190,12 +190,12 @@
                         </div>
                         <div class="flex justify-between items-center border-b border-white/5 py-3.5">
                             <span class="text-sm text-slate-400">Exploited Vulnerabilities</span>
-                            <span class="text-lg font-mono font-bold text-slate-100">2</span>
+                            <span id="after-vulns" class="text-lg font-mono font-bold text-slate-100">-</span>
                         </div>
                         <div class="flex justify-between items-center py-3.5">
                             <span class="text-sm text-slate-400">Target Node Health</span>
-                            <span
-                                class="px-3 py-1 bg-red-500/10 border border-red-500/25 rounded text-[10px] font-bold text-red-400 uppercase tracking-wider">Degraded</span>
+                            <span id="after-health"
+                                class="px-3 py-1 bg-red-500/10 border border-red-500/25 rounded text-[10px] font-bold text-red-400 uppercase tracking-wider">Unknown</span>
                         </div>
                     </div>
                     <div class="flex items-center justify-center pl-2">
@@ -370,11 +370,11 @@
                 if (s.status === 'running') {
                     updateStatus('running');
                     setOrchStatus(`${s.current_attack||'...'} (${s.progress||0}%)`);
-                    fetchMetrics();
+                    refreshAll();
                 } else if (s.status === 'completed' || s.status === 'failed') {
                     stopPolling(); showStopBtn(false);
                     setOrchStatus(s.status === 'completed' ? 'Run completed' : `Failed: ${s.error||'unknown'}`);
-                    updateStatus('live'); fetchMetrics();
+                    updateStatus('live'); refreshAll();
                 } else if (s.status === 'idle') {
                     stopPolling(); showStopBtn(false); setOrchStatus('');
                 }
@@ -393,9 +393,48 @@
             } catch(e) { updateStatus('mock'); }
         }
 
-        document.getElementById('refresh-btn').addEventListener('click', fetchMetrics);
+        async function fetchSummary() {
+            try {
+                const r = await fetch('/api/summary');
+                if (!r.ok) return;
+                const data = await r.json();
+                
+                if (data.before) {
+                    document.getElementById('before-resilience').textContent = data.before.resilience + '%';
+                    document.getElementById('before-vulns').textContent = data.before.vulns;
+                }
+                
+                if (data.after) {
+                    document.getElementById('after-resilience').textContent = data.after.resilience + '%';
+                    document.getElementById('after-vulns').textContent = data.after.vulns;
+                    
+                    const healthEl = document.getElementById('after-health');
+                    if (data.after.vulns > 0) {
+                        healthEl.textContent = 'Degraded';
+                        healthEl.className = 'px-3 py-1 bg-red-500/10 border border-red-500/25 rounded text-[10px] font-bold text-red-400 uppercase tracking-wider';
+                    } else {
+                        healthEl.textContent = 'Optimal';
+                        healthEl.className = 'px-3 py-1 bg-emerald-500/10 border border-emerald-500/25 rounded text-[10px] font-bold text-emerald-400 uppercase tracking-wider';
+                    }
+                } else {
+                    document.getElementById('after-resilience').textContent = '--%';
+                    document.getElementById('after-vulns').textContent = '-';
+                    const healthEl = document.getElementById('after-health');
+                    healthEl.textContent = 'Unknown';
+                    healthEl.className = 'px-3 py-1 bg-slate-500/10 border border-slate-500/25 rounded text-[10px] font-bold text-slate-400 uppercase tracking-wider';
+                }
+            } catch(e) {}
+        }
+
+        function refreshAll() {
+            fetchMetrics();
+            fetchSummary();
+        }
+
+        document.getElementById('refresh-btn').addEventListener('click', refreshAll);
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchMetrics();
+            await fetchSummary();
             try { const r = await fetch('/api/orchestrator/status'); const s = await r.json(); if(s.status==='running'){showStopBtn(true);startPolling();} } catch(e){}
         });
     </script>

@@ -45,6 +45,14 @@ from csrf_attack import run_csrf_attack
 
 app = Flask(__name__)
 
+
+# ─── Terminal Logger ─────────────────────────────────────────────────────────
+
+def _log(msg: str, symbol: str = "  "):
+    """Print a timestamped line to the Engine API terminal."""
+    ts = datetime.now().strftime("%H:%M:%S")
+    print(f"[{ts}] {symbol} {msg}", flush=True)
+
 # ─── Attack Registry (mirrors run_demo.py) ──────────────────────────────────
 
 ATTACK_REGISTRY = {
@@ -139,6 +147,7 @@ def _run_orchestration(run_id: str, phase: str, attacks: list, send_dashboard: b
         if not registry:
             _set_state(status="failed", error="No valid attacks selected")
             log_run_end(run_id, "failed", "No valid attacks selected")
+            _log(f"Run {run_id} FAILED — no valid attacks selected", "❌")
             return
 
         total = len(registry)
@@ -157,20 +166,26 @@ def _run_orchestration(run_id: str, phase: str, attacks: list, send_dashboard: b
                 log_run_end(run_id, "stopped")
                 return
 
+            _log(f"[{run_id}] Phase: BEFORE CHAOS", "▶️")
             _set_state(current_phase="before_chaos")
             before_results = orch.run_before_chaos(send_dashboard)
 
             for i, r in enumerate(before_results):
                 completed = len(all_results) + i + 1
+                attack = r.get('attack_type', 'unknown')
+                outcome = '✅ Mitigated' if not r.get('success') else '❌ Bypassed'
+                tte = r.get('tte', 0)
+                _log(f"  [{run_id}] {attack:30s} {outcome}  TTE={tte:.2f}s", "  ")
                 _set_state(
                     completed_attacks=completed,
-                    current_attack=r.get("attack_type", "unknown"),
+                    current_attack=attack,
                     progress=int((completed / total) * 100),
                     results=all_results + before_results[:i+1],
                 )
                 if _stop_event.is_set():
                     _set_state(status="idle", current_phase=None)
                     log_run_end(run_id, "stopped")
+                    _log(f"[{run_id}] STOPPED during before_chaos", "🛑")
                     return
 
             all_results.extend(before_results)
@@ -182,14 +197,19 @@ def _run_orchestration(run_id: str, phase: str, attacks: list, send_dashboard: b
                 log_run_end(run_id, "stopped")
                 return
 
+            _log(f"[{run_id}] Phase: AFTER CHAOS", "▶️")
             _set_state(current_phase="after_chaos")
             after_results = orch.run_after_chaos(send_dashboard)
 
             for i, r in enumerate(after_results):
                 completed = len(all_results) + i + 1
+                attack = r.get('attack_type', 'unknown')
+                outcome = '✅ Mitigated' if not r.get('success') else '❌ Bypassed'
+                tte = r.get('tte', 0)
+                _log(f"  [{run_id}] {attack:30s} {outcome}  TTE={tte:.2f}s", "  ")
                 _set_state(
                     completed_attacks=completed,
-                    current_attack=r.get("attack_type", "unknown"),
+                    current_attack=attack,
                     progress=int((completed / total) * 100),
                     results=all_results + after_results[:i+1],
                 )
@@ -208,10 +228,12 @@ def _run_orchestration(run_id: str, phase: str, attacks: list, send_dashboard: b
             current_phase=None,
         )
         log_run_end(run_id, "completed")
+        _log(f"Run {run_id} COMPLETED  ({len(all_results)} results)", "✅")
 
     except Exception as exc:
         _set_state(status="failed", error=str(exc), current_phase=None)
         log_run_end(run_id, "failed", str(exc))
+        _log(f"Run {run_id} FAILED: {exc}", "❌")
 
 
 # ─── API Routes ─────────────────────────────────────────────────────────────
@@ -302,6 +324,18 @@ def execute():
 
     log_run_start(run_id, phase, attacks or list(ATTACK_REGISTRY.keys()))
 
+    # Clear the metrics dashboard for a clean slate on each new run
+    if send_dashboard:
+        try:
+            import requests as _req
+            from config import DASHBOARD_URL as _DASH_URL
+            _req.post(f"{_DASH_URL}/api/experiments/clear", timeout=3)
+            _log(f"Metrics dashboard cleared for fresh run", "🧹")
+        except Exception:
+            pass
+
+    _log(f"Run {run_id} STARTED  phase={phase}  attacks={attacks or list(ATTACK_REGISTRY.keys())}", "🚀")
+
     _execution_thread = threading.Thread(
         target=_run_orchestration,
         args=(run_id, phase, attacks, send_dashboard),
@@ -327,20 +361,14 @@ def stop():
 
     _stop_event.set()
     _set_state(status="stopping")
+    _log(f"Run {current['run_id']} STOPPED by API request", "🛑")
     return jsonify({"message": "Stop signal sent", "run_id": current["run_id"]})
 
 
 @app.route("/api/controls", methods=["POST"])
 @require_api_key
 def controls():
-    """Toggle security controls on the target webapp.
-
-    JSON body:
-        control: "RATE_LIMIT_ENABLED" | "RBAC_ENABLED" | ...
-        value:   true/false
-    OR:
-        controls: {"RATE_LIMIT_ENABLED": true, "RBAC_ENABLED": false, ...}
-    """
+    """Toggle security controls on the target webapp."""
     data = request.get_json(silent=True) or {}
 
     # Batch mode
@@ -353,8 +381,10 @@ def controls():
             if not isinstance(value, bool):
                 results[control] = {"error": "Value must be boolean"}
                 continue
-            ok = toggle_control(control, value, verbose=False)
+            ok = toggle_control(control, value, verbose=True)
             results[control] = {"success": ok, "value": value}
+            if ok:
+                _log(f"[BATCH] {control} → {'ON' if value else 'OFF'}", "🔧")
         return jsonify({"results": results})
 
     # Single mode
@@ -370,7 +400,9 @@ def controls():
     if not isinstance(value, bool):
         return jsonify({"error": "Value must be boolean"}), 400
 
-    ok = toggle_control(control, value, verbose=False)
+    ok = toggle_control(control, value, verbose=True)
+    if ok:
+        _log(f"{control} → {'ON  ✅' if value else 'OFF ❌'}  (via API)", "🔧")
     return jsonify({"success": ok, "control": control, "value": value})
 
 

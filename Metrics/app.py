@@ -88,17 +88,43 @@ def receive_data():
         incoming_data.get("success", False),
     )
 
-    experiments[phase].append(incoming_data)
+    # Replace existing entry for same attack_type in this phase (upsert)
+    attack_type = incoming_data.get("attack_type", "")
+    existing = experiments[phase]
+    replaced = False
+    for i, entry in enumerate(existing):
+        if entry.get("attack_type") == attack_type:
+            existing[i] = incoming_data
+            replaced = True
+            break
+    if not replaced:
+        existing.append(incoming_data)
+
     save_experiment(phase, incoming_data)
     return jsonify({"message": "Data received successfully!", "status": "success"}), 200
+
+
+@app.route("/api/experiments/clear", methods=["POST"])
+def clear_experiments_endpoint():
+    """Reset in-memory experiments for a fresh run."""
+    from metrics_db import clear_experiments
+    experiments["before_chaos"].clear()
+    experiments["after_chaos"].clear()
+    clear_experiments()
+    return jsonify({"message": "Experiments cleared"}), 200
 
 
 # ─── New Routes: Metrics API ───────────────────────────────────────────────
 
 @app.route("/api/metrics", methods=["GET"])
 def get_metrics():
-    """Return live experiment data mapped to frontend table schema."""
-    all_entries = []
+    """Return live experiment data mapped to frontend table schema.
+
+    Deduplicates by attack_type only — one row per attack, most recent
+    result wins. Phase is included as metadata but not used as a key,
+    so the same attack never appears twice in the table.
+    """
+    seen = {}  # key: attack_type → latest entry across both phases
     for phase in ["before_chaos", "after_chaos"]:
         for exp in experiments[phase]:
             exp["phase"] = phase
@@ -106,8 +132,39 @@ def get_metrics():
                 exp.get("enabled_controls", 0), exp.get("total_controls", 1),
                 exp.get("tte", 0), exp.get("success", False)
             )
-            all_entries.append(_map_to_frontend(exp))
-    return jsonify(all_entries)
+            key = exp.get("attack_type", "unknown")
+            seen[key] = exp  # after_chaos overwrites before_chaos → latest wins
+
+    return jsonify([_map_to_frontend(e) for e in seen.values()])
+
+
+@app.route("/api/summary", methods=["GET"])
+def get_summary():
+    """Return aggregate baseline (before) and impact (after) scores."""
+    def calc_phase(phase):
+        exps = experiments.get(phase, [])
+        if not exps:
+            return None
+        
+        total_score = 0
+        vulns = 0
+        for exp in exps:
+            total_score += calculate_resilience(
+                exp.get("enabled_controls", 0), exp.get("total_controls", 1),
+                exp.get("tte", 0), exp.get("success", False)
+            )
+            if exp.get("success"):
+                vulns += 1
+                
+        return {
+            "resilience": round(total_score / len(exps), 1),
+            "vulns": vulns
+        }
+
+    return jsonify({
+        "before": calc_phase("before_chaos"),
+        "after": calc_phase("after_chaos")
+    })
 
 
 @app.route("/api/history", methods=["GET"])
