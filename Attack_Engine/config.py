@@ -18,13 +18,14 @@ ENGINE_API_KEY = "scel-engine-key-2024"
 
 # ─── Hardcoded Users (must match Target_webapp/models/users.py) ──────────────
 USERS = {
-    "user1": {"password": "password123", "id": 1},
-    "user2": {"password": "password456", "id": 2},
+    "user1": {"password": "user123", "id": 2},
+    "user2": {"password": "user456", "id": 3},
 }
 
 # ─── Brute Force Wordlist ────────────────────────────────────────────────────
-# The correct password is deliberately placed in the list so the attack
-# eventually succeeds. The position controls how long it takes (TTE).
+# user2's password is placed near the end so the attack takes multiple attempts.
+# Rate limiting (before chaos) triggers before we reach it → attack blocked.
+# Without rate limiting (after chaos) all attempts run → password found → exploit succeeds.
 PASSWORD_LIST = [
     "admin",
     "letmein",
@@ -40,7 +41,7 @@ PASSWORD_LIST = [
     "iloveyou",
     "trustno1",
     "sunshine",
-    "password123",   # ← correct password for user1 (position matters for TTE)
+    "user456",   # ← correct password for user2 (position near end = meaningful TTE)
 ]
 
 # ─── SQLite Database ─────────────────────────────────────────────────────────

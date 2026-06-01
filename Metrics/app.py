@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 import requests as req_lib
 
 # Import directly from the local scoring.py file
@@ -52,7 +52,7 @@ def _map_to_frontend(entry):
         "blastRadius": BLAST_RADIUS_MAP.get(attack, "Medium"),
         "status": status,
         "timeToExploit": time_str,
-        "enabled": False,
+        "enabled": True,   # always checked so toggles survive across runs
         "phase": entry.get("phase", "unknown"),
         "score": entry.get("score", 0),
         "enabled_controls": entry.get("enabled_controls", 0),
@@ -70,7 +70,9 @@ def dashboard():
                 exp.get("enabled_controls", 0), exp.get("total_controls", 1),
                 exp.get("tte", 0), exp.get("success", False)
             )
-    return render_template("index.html", results_before=experiments["before_chaos"], results_after=experiments["after_chaos"])
+    resp = make_response(render_template("index.html", results_before=experiments["before_chaos"], results_after=experiments["after_chaos"]))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 @app.route("/api/submit", methods=["POST"])
 def receive_data():
@@ -140,25 +142,36 @@ def get_metrics():
 
 @app.route("/api/summary", methods=["GET"])
 def get_summary():
-    """Return aggregate baseline (before) and impact (after) scores."""
+    """Return aggregate baseline (before) and impact (after) scores.
+
+    before.vulns  = number of vulnerabilities actively TESTED (len of experiments)
+    after.vulns   = number of vulnerabilities successfully EXPLOITED (success=True count)
+    """
     def calc_phase(phase):
         exps = experiments.get(phase, [])
         if not exps:
             return None
-        
+
         total_score = 0
-        vulns = 0
+        exploited = 0
         for exp in exps:
             total_score += calculate_resilience(
                 exp.get("enabled_controls", 0), exp.get("total_controls", 1),
                 exp.get("tte", 0), exp.get("success", False)
             )
             if exp.get("success"):
-                vulns += 1
-                
+                exploited += 1
+
+        tested = len(exps)
+        # before_chaos: show how many attacks were probed (active vulnerabilities being tested)
+        # after_chaos:  show how many actually got exploited
+        vulns = tested if phase == "before_chaos" else exploited
+
         return {
-            "resilience": round(total_score / len(exps), 1),
-            "vulns": vulns
+            "resilience": round(total_score / tested, 1),
+            "vulns": vulns,
+            "tested": tested,
+            "exploited": exploited,
         }
 
     return jsonify({

@@ -33,7 +33,8 @@ def init_db():
             total_controls  INTEGER,
             tte             REAL,
             success         INTEGER,
-            score           REAL
+            score           REAL,
+            UNIQUE(phase, attack_type) ON CONFLICT REPLACE
         )
     """)
     conn.execute("""

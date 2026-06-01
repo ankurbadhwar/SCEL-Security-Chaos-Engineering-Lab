@@ -11,22 +11,32 @@ from config import DASHBOARD_URL, TARGET_URL
 
 def get_control_states() -> dict:
     """
-    Query the target webapp's toggle endpoint to determine which controls
+    Query the target webapp's /status endpoint to determine which controls
     are currently enabled. Returns counts for the dashboard payload.
 
     Falls back to defaults if the target is unreachable.
     """
-    # The target webapp doesn't have a GET /toggle, so we infer from
-    # the config module at import time. For a networked setup we'd
-    # query an API; here we accept them as parameters instead.
+    try:
+        resp = requests.get(f"{TARGET_URL}/status", timeout=3)
+        if resp.status_code == 200:
+            data = resp.json()
+            total = len(data)
+            enabled = sum(1 for v in data.values() if v)
+            return {
+                "enabled_controls": enabled,
+                "total_controls": total,
+            }
+    except Exception:
+        pass
+
     return {
-        "enabled_controls": 3,  # default: all 3 controls on
-        "total_controls": 3,
+        "enabled_controls": 6,  # fallback: all 6 controls on
+        "total_controls": 6,
     }
 
 
 def send_to_dashboard(result: dict, phase: str = "before_chaos",
-                      enabled_controls: int = 3, total_controls: int = 3,
+                      enabled_controls: int = 6, total_controls: int = 6,
                       verbose: bool = True) -> dict | None:
     """
     POST an attack result to the Metrics Dashboard.

@@ -133,7 +133,7 @@ def print_summary_table(results: list[dict]):
 # ─── Phase runners (delegated to AttackOrchestrator) ─────────────────────────
 
 def _make_orchestrator() -> AttackOrchestrator:
-    return AttackOrchestrator(ATTACK_REGISTRY, enabled_controls=3, total_controls=3)
+    return AttackOrchestrator(ATTACK_REGISTRY, enabled_controls=6, total_controls=6)
 
 
 def run_phase_before_chaos(send_dashboard: bool = True) -> list[dict]:

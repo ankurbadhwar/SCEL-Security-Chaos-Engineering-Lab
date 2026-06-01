@@ -156,7 +156,7 @@ def _run_orchestration(run_id: str, phase: str, attacks: list, send_dashboard: b
 
         _set_state(total_attacks=total, completed_attacks=0, progress=0)
 
-        orch = AttackOrchestrator(registry, enabled_controls=3, total_controls=3)
+        orch = AttackOrchestrator(registry, enabled_controls=6, total_controls=6)
         all_results = []
 
         # ── Before chaos phase ──────────────────────────────────────────

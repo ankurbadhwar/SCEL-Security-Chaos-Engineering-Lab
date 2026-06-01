@@ -212,13 +212,14 @@
                             <line x1="60" y1="60" x2="60" y2="105" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
                             <line x1="60" y1="60" x2="18" y2="82.5" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
                             <line x1="60" y1="60" x2="18" y2="37.5" stroke="rgba(239,68,68,0.1)" stroke-width="0.5" />
-                            <polygon points="60,22 95,42 88,80 35,82 25,45" fill="rgba(239, 68, 68, 0.15)"
-                                stroke="#ef4444" stroke-width="1.5" stroke-linejoin="round" />
-                            <circle cx="60" cy="22" r="2.5" fill="#ef4444" />
-                            <circle cx="95" cy="42" r="2.5" fill="#ef4444" />
-                            <circle cx="88" cy="80" r="2.5" fill="#ef4444" />
-                            <circle cx="35" cy="82" r="2.5" fill="#ef4444" />
-                            <circle cx="25" cy="45" r="2.5" fill="#ef4444" />
+                            <!-- data-driven threat polygon: updated by updateHeatmap() -->
+                            <polygon id="heatmap-polygon" points="60,60 60,60 60,60 60,60 60,60"
+                                fill="rgba(239, 68, 68, 0.15)" stroke="#ef4444" stroke-width="1.5" stroke-linejoin="round" />
+                            <circle id="hm-v0" cx="60" cy="60" r="2.5" fill="#ef4444" />
+                            <circle id="hm-v1" cx="60" cy="60" r="2.5" fill="#ef4444" />
+                            <circle id="hm-v2" cx="60" cy="60" r="2.5" fill="#ef4444" />
+                            <circle id="hm-v3" cx="60" cy="60" r="2.5" fill="#ef4444" />
+                            <circle id="hm-v4" cx="60" cy="60" r="2.5" fill="#ef4444" />
                         </svg>
                     </div>
                 </div>
@@ -307,26 +308,74 @@
         }
         function getStatusBadge(status) {
             const icons = {'Running':`<svg class="w-3.5 h-3.5 pulse-dot" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,'Mitigated':`<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,'Passed':`<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,'Failed':`<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`};
-            const colors = {'Running':'text-sky-400','Mitigated':'text-emerald-400','Passed':'text-emerald-400','Failed':'text-red-400'};
+            const colors = {'Running':'text-sky-400','Mitigated':'text-emerald-400','Passed':'text-emerald-400','Failed':'text-red-400','Ready':'text-slate-400'};
             return `<span class="flex items-center gap-1.5 text-sm font-semibold ${colors[status]||'text-slate-400'}">${icons[status]||''} ${status}</span>`;
         }
-        function renderTable(data) {
+        // ─── Table: built ONCE, never torn down ──────────────────────────────
+        const ALL_ATTACKS = [
+            {target:'Brute Force Login',       blastRadius:'Medium'},
+            {target:'IDOR Access',              blastRadius:'High'},
+            {target:'Command Injection',        blastRadius:'High'},
+            {target:'Unrestricted File Upload', blastRadius:'Medium'},
+            {target:'CSRF Transfer',            blastRadius:'Medium'},
+        ];
+
+        function initTable() {
             const tbody = document.getElementById('metrics-table-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            data.forEach(row => {
+            if (!tbody || tbody.children.length > 0) return; // already built
+            ALL_ATTACKS.forEach(def => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-white/[0.03] transition-colors';
+                tr.dataset.attack = def.target;
                 tr.innerHTML = `
-                    <td class="px-7 py-4 text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer chaos-toggle" value="${row.target}" ${row.enabled?'checked':''} onchange="updateQueueCount()"><div class="w-8 h-4 bg-[#1a1f28] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-gray-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500/80 peer-checked:border-cyan-500"></div></label></td>
-                    <td class="px-7 py-4 text-sm font-mono text-cyan-400">${row.target}</td>
-                    <td class="px-7 py-4">${getBlastBadge(row.blastRadius)}</td>
-                    <td class="px-7 py-4 text-sm font-mono text-slate-400">${row.timeToExploit}</td>
-                    <td class="px-7 py-4">${getStatusBadge(row.status)}</td>
+                    <td class="px-7 py-4 text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer chaos-toggle" value="${def.target}" checked onchange="updateQueueCount()"><div class="w-8 h-4 bg-[#1a1f28] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-gray-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500/80 peer-checked:border-cyan-500"></div></label></td>
+                    <td class="px-7 py-4 text-sm font-mono text-cyan-400">${def.target}</td>
+                    <td class="px-7 py-4">${getBlastBadge(def.blastRadius)}</td>
+                    <td class="px-7 py-4 text-sm font-mono text-slate-400 tte-cell">N/A</td>
+                    <td class="px-7 py-4 status-cell">${getStatusBadge('Ready')}</td>
                     <td class="px-7 py-4"></td>`;
                 tbody.appendChild(tr);
             });
             updateQueueCount();
+        }
+
+        // Patches only status + TTE cells — rows and checkboxes are never touched
+        function updateTableStatuses(data) {
+            if (!data || data.length === 0) return;
+            const resultMap = {};
+            data.forEach(r => { if (r.target) resultMap[r.target] = r; });
+            document.querySelectorAll('#metrics-table-body tr[data-attack]').forEach(tr => {
+                const real = resultMap[tr.dataset.attack];
+                if (real) {
+                    const statusCell = tr.querySelector('.status-cell');
+                    const tteCell   = tr.querySelector('.tte-cell');
+                    if (statusCell) statusCell.innerHTML = getStatusBadge(real.status);
+                    if (tteCell)   tteCell.textContent  = real.timeToExploit;
+                }
+            });
+            updateHeatmap(resultMap);
+        }
+
+        // ─── Heatmap: data-driven pentagon ────────────────────────────────
+        // Axes order maps to ALL_ATTACKS order (top, upper-right, lower-right, lower-left, upper-left)
+        const HEATMAP_ANGLES_DEG = [-90, -18, 54, 126, 198];
+        function updateHeatmap(resultMap) {
+            const cx = 60, cy = 60, maxR = 43;
+            const pts = ALL_ATTACKS.map((def, i) => {
+                const real = resultMap[def.target];
+                // threat level: Failed (exploited)=1.0, Ready/untested=0.2, Mitigated=0.12
+                let threat = 0.2;
+                if (real) threat = (real.status === 'Failed') ? 1.0 : 0.12;
+                const rad = HEATMAP_ANGLES_DEG[i] * Math.PI / 180;
+                const r = threat * maxR;
+                return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+            });
+            const polygon = document.getElementById('heatmap-polygon');
+            if (polygon) polygon.setAttribute('points', pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '));
+            pts.forEach((p, i) => {
+                const c = document.getElementById(`hm-v${i}`);
+                if (c) { c.setAttribute('cx', p.x.toFixed(1)); c.setAttribute('cy', p.y.toFixed(1)); }
+            });
         }
         function updateQueueCount() {
             const c = document.querySelectorAll('.chaos-toggle:checked');
@@ -388,8 +437,8 @@
                 const r = await fetch('/api/metrics');
                 if (!r.ok) throw new Error('API down');
                 const data = await r.json();
-                if (data.length > 0) { renderTable(data); updateStatus('live'); }
-                else { updateStatus('live'); }
+                updateTableStatuses(data);  // only patches cells, never rebuilds rows
+                updateStatus('live');
             } catch(e) { updateStatus('mock'); }
         }
 
@@ -398,16 +447,15 @@
                 const r = await fetch('/api/summary');
                 if (!r.ok) return;
                 const data = await r.json();
-                
+
                 if (data.before) {
-                    document.getElementById('before-resilience').textContent = data.before.resilience + '%';
+                    document.getElementById('before-resilience').textContent = data.before.resilience.toFixed(1) + '%';
                     document.getElementById('before-vulns').textContent = data.before.vulns;
                 }
-                
+
                 if (data.after) {
-                    document.getElementById('after-resilience').textContent = data.after.resilience + '%';
+                    document.getElementById('after-resilience').textContent = data.after.resilience.toFixed(1) + '%';
                     document.getElementById('after-vulns').textContent = data.after.vulns;
-                    
                     const healthEl = document.getElementById('after-health');
                     if (data.after.vulns > 0) {
                         healthEl.textContent = 'Degraded';
@@ -432,10 +480,17 @@
         }
 
         document.getElementById('refresh-btn').addEventListener('click', refreshAll);
+        // Passive 5-second summary poll — keeps cards in sync regardless of run state
+        setInterval(fetchSummary, 5000);
         document.addEventListener('DOMContentLoaded', async () => {
-            await fetchMetrics();
-            await fetchSummary();
-            try { const r = await fetch('/api/orchestrator/status'); const s = await r.json(); if(s.status==='running'){showStopBtn(true);startPolling();} } catch(e){}
+            initTable();              // build 5 rows once — never rebuilt
+            await fetchMetrics();    // patch statuses from any previous run
+            await fetchSummary();    // populate before/after score cards
+            try {
+                const r = await fetch('/api/orchestrator/status');
+                const s = await r.json();
+                if (s.status === 'running') { showStopBtn(true); startPolling(); }
+            } catch(e) {}
         });
     </script>
 </body>
