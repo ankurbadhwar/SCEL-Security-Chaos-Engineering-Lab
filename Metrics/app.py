@@ -130,10 +130,8 @@ def get_metrics():
     for phase in ["before_chaos", "after_chaos"]:
         for exp in experiments[phase]:
             exp["phase"] = phase
-            exp["score"] = calculate_resilience(
-                exp.get("enabled_controls", 0), exp.get("total_controls", 1),
-                exp.get("tte", 0), exp.get("success", False)
-            )
+            # Outcome-based score: blocked = 100, exploited = 0
+            exp["score"] = 0.0 if exp.get("success", False) else 100.0
             key = exp.get("attack_type", "unknown")
             seen[key] = exp  # after_chaos overwrites before_chaos → latest wins
 
@@ -144,31 +142,27 @@ def get_metrics():
 def get_summary():
     """Return aggregate baseline (before) and impact (after) scores.
 
-    before.vulns  = number of vulnerabilities actively TESTED (len of experiments)
-    after.vulns   = number of vulnerabilities successfully EXPLOITED (success=True count)
+    Resilience is outcome-based: (attacks_blocked / attacks_tested) * 100
+      before_chaos all controls ON  -> all blocked    -> 100%
+      after_chaos  all controls OFF -> some exploited -> e.g. 40%
+
+    before.vulns = attack vectors probed in this run
+    after.vulns  = attacks that successfully exploited the system
     """
     def calc_phase(phase):
         exps = experiments.get(phase, [])
         if not exps:
             return None
 
-        total_score = 0
-        exploited = 0
-        for exp in exps:
-            total_score += calculate_resilience(
-                exp.get("enabled_controls", 0), exp.get("total_controls", 1),
-                exp.get("tte", 0), exp.get("success", False)
-            )
-            if exp.get("success"):
-                exploited += 1
+        tested    = len(exps)
+        exploited = sum(1 for e in exps if e.get("success"))
+        mitigated = tested - exploited
+        resilience = round((mitigated / tested) * 100.0, 1)
 
-        tested = len(exps)
-        # before_chaos: show how many attacks were probed (active vulnerabilities being tested)
-        # after_chaos:  show how many actually got exploited
         vulns = tested if phase == "before_chaos" else exploited
 
         return {
-            "resilience": round(total_score / tested, 1),
+            "resilience": resilience,
             "vulns": vulns,
             "tested": tested,
             "exploited": exploited,
@@ -176,7 +170,7 @@ def get_summary():
 
     return jsonify({
         "before": calc_phase("before_chaos"),
-        "after": calc_phase("after_chaos")
+        "after":  calc_phase("after_chaos")
     })
 
 
@@ -304,7 +298,7 @@ def get_profiles():
 def create_profile():
     """Save a security profile."""
     data = request.get_json(silent=True) or {}
-    name = data.get("name", "").strip()
+    name = data.get("name", "").strip()                                                                                                                                                                                     
     controls = data.get("controls", {})
 
     if not name:

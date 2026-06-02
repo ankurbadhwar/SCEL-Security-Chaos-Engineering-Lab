@@ -29,7 +29,7 @@ def ping():
                 </h2>
                 """
 
-            result = os.popen(f"ping {ip}").read()
+            result = os.popen(f"ping -c 1 {ip}").read()
 
         # =========================================
         # VULNERABLE MODE
@@ -37,7 +37,7 @@ def ping():
 
         else:
 
-            result = os.popen(f"ping {ip}").read()
+            result = os.popen(f"ping -c 1 {ip}").read()
 
     return render_template(
         'ping.html',

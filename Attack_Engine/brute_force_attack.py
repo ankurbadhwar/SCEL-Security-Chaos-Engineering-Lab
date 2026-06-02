@@ -24,7 +24,7 @@ import requests
 from config import TARGET_URL, PASSWORD_LIST
 
 
-def run_brute_force(target_username: str = "user1",
+def run_brute_force(target_username: str = "user2",
                     password_list: list = None,
                     verbose: bool = True) -> dict:
     """
