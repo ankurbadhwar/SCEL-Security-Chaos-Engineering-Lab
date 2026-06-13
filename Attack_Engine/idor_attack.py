@@ -4,8 +4,14 @@ IDOR (Insecure Direct Object Reference) Attack
 Simulates an IDOR attack: log in as user1, then try to access user2's profile.
 
 Behaviour with controls:
-    ✅ RBAC ON  → /profile/2 returns 403 (Access denied)
-    ❌ RBAC OFF → /profile/2 returns 200 (Profile data leaked)
+    ✅ RBAC ON + IDOR_PROTECTION ON  → /profile/3 returns 403 (Access denied)
+    ❌ Controls OFF                  → /profile/3 returns 200 (Profile data leaked)
+
+URL note (Bug 2 — BUGS_AND_CLEANUP.md):
+    This engine tests the JSON API endpoint: GET /profile/<id>
+    The browser demo UI opens:            GET /profile-ui/<id>  (HTML render)
+    Both routes share the same RBAC + IDOR_PROTECTION enforcement, but they
+    are separate Flask routes. The attack result reflects /profile/<id> only.
 
 Output:
     {

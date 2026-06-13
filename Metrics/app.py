@@ -2,7 +2,11 @@ from flask import Flask, render_template, request, jsonify, make_response
 import requests as req_lib
 
 # Import directly from the local scoring.py file
-from scoring import calculate_resilience
+from scoring import (
+    calculate_resilience,
+    calculate_resilience_weighted,
+    get_weight,
+)
 from metrics_db import save_experiment, load_experiments, save_profile, load_profiles
 
 app = Flask(__name__)
@@ -130,9 +134,11 @@ def get_metrics():
     for phase in ["before_chaos", "after_chaos"]:
         for exp in experiments[phase]:
             exp["phase"] = phase
-            # Outcome-based score: blocked = 100, exploited = 0
-            exp["score"] = 0.0 if exp.get("success", False) else 100.0
-            key = exp.get("attack_type", "unknown")
+            # Severity-weighted score: weight points if mitigated, 0 if exploited.
+            # e.g. Command Injection mitigated = 30, exploited = 0.
+            attack_type = exp.get("attack_type", "")
+            exp["score"] = 0.0 if exp.get("success", False) else float(get_weight(attack_type))
+            key = attack_type or "unknown"
             seen[key] = exp  # after_chaos overwrites before_chaos → latest wins
 
     return jsonify([_map_to_frontend(e) for e in seen.values()])
@@ -142,9 +148,11 @@ def get_metrics():
 def get_summary():
     """Return aggregate baseline (before) and impact (after) scores.
 
-    Resilience is outcome-based: (attacks_blocked / attacks_tested) * 100
-      before_chaos all controls ON  -> all blocked    -> 100%
-      after_chaos  all controls OFF -> some exploited -> e.g. 40%
+    Resilience uses severity-weighted formula from scoring.py:
+        resilience = (Σ weight[mitigated]) / (Σ weight[tested]) × 100
+
+    Bypassing Command Injection (weight 30) drops resilience by 30 pts;
+    bypassing Brute Force (weight 10) drops it by only 10 pts.
 
     before.vulns = attack vectors probed in this run
     after.vulns  = attacks that successfully exploited the system
@@ -156,8 +164,9 @@ def get_summary():
 
         tested    = len(exps)
         exploited = sum(1 for e in exps if e.get("success"))
-        mitigated = tested - exploited
-        resilience = round((mitigated / tested) * 100.0, 1)
+
+        # Severity-weighted resilience
+        resilience = calculate_resilience_weighted(exps)
 
         vulns = tested if phase == "before_chaos" else exploited
 

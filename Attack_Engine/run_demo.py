@@ -28,7 +28,6 @@ import os
 import json
 import argparse
 import time
-import requests as req_lib
 
 # Ensure imports work when run from the Attack_Engine directory
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -38,26 +37,8 @@ from idor_attack import run_idor_attack
 from command_injection_attack import run_command_injection
 from file_upload_attack import run_file_upload
 from csrf_attack import run_csrf_attack
-from db_logger import log_attack, get_all_results, clear_results
-from dashboard_reporter import send_to_dashboard, toggle_control
-from config import TARGET_URL
+from db_logger import get_all_results, clear_results
 from orchestrator import AttackOrchestrator
-
-
-def reset_rate_limit():
-    """Clear server-side rate-limit counters."""
-    try:
-        req_lib.post(f"{TARGET_URL}/reset-rate-limit", timeout=3)
-    except Exception:
-        pass
-
-
-# ─── Resilience score (local copy, matches Metrics/scoring.py) ───────────────
-def calculate_resilience(enabled: int, total: int, tte: float, success: bool) -> float:
-    defense = enabled / total if total > 0 else 0
-    tte_norm = min(tte / 10.0, 1.0)
-    success_val = 1 if success else 0
-    return round((defense * tte_norm) / (success_val + 1) * 100, 2)
 
 
 # ─── Attack registry ─────────────────────────────────────────────────────────

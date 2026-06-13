@@ -56,20 +56,27 @@ def _apply_controls(states: dict[str, bool]) -> None:
     time.sleep(0.3)
 
 
-# ─── Resilience scoring (mirrors run_demo.py / Metrics/scoring.py) ──────────
+# ─── Resilience scoring ───────────────────────────────────────────────────────
+# Severity weights mirror Metrics/scoring.py ATTACK_SEVERITY.
+# Update BOTH files together if weights change.
+_ATTACK_WEIGHTS = {
+    "Command Injection":         30,
+    "Unrestricted File Upload":  25,
+    "IDOR Access":               20,
+    "CSRF Transfer":             15,
+    "Brute Force Login":         10,
+}
 
-def _calculate_resilience(enabled: int, total: int, tte: float, success: bool) -> float:
-    """Mirror of Metrics/scoring.py — keep in sync.
 
-    Blocked → defense_strength * 100  (all 6 on, blocked = 100%)
-    Succeeded → defense_strength * 20 (all 6 off, succeeded = 0%)
+def _calculate_resilience(attack_type: str, success: bool) -> float:
+    """Severity-weighted resilience score for console output.
+
+    Returns the attack's weight (e.g. 30 for Command Injection) if mitigated,
+    or 0.0 if exploited.  Mirrors per-attack score logic in Metrics/app.py.
     """
-    defense = enabled / total if total > 0 else 0.0
-    if not success:
-        raw = defense * 100.0
-    else:
-        raw = defense * 20.0
-    return round(min(raw, 100.0), 1)
+    weight = _ATTACK_WEIGHTS.get(attack_type, 15)
+    return float(weight) if not success else 0.0
+
 
 
 # ─── Orchestrator ────────────────────────────────────────────────────────────
@@ -125,7 +132,7 @@ class AttackOrchestrator:
             result["enabled_controls"] = enabled
             result["total_controls"] = self._total_controls
             result["resilience_score"] = _calculate_resilience(
-                enabled, self._total_controls, result.get("tte", 0.0), result.get("success", False)
+                result.get("attack_type", ""), result.get("success", False)
             )
 
             log_attack(result)
