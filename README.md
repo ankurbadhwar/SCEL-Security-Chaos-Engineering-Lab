@@ -411,14 +411,6 @@ Two implementation caveats are still worth stating clearly:
 - the file upload scenario exists and is demonstrable, but it is still partially unreliable
 - the UI path for IDOR demonstration is not a perfect mirror of the engine’s backend attack path, even though the backend protection is now wired in
 
-### Screenshots and demo artifacts
-
-The repository includes report assets and presentation material, including:
-
-- `SECURITY CHAOS ENGINEERING LAB (SCEL).pptx`
-- `SCEL-mini project - doc.docx`
-
-If you want to add dashboard screenshots to this README later, this section is the right place for them.
 
 ## Challenges Faced
 
@@ -475,7 +467,7 @@ Why it happened:
 How it was mitigated:
 
 - the feature remains in the project because the route and attack flow are implemented
-- audit documents classify it honestly as partially verified rather than pretending it is fully stable
+- we classify it honestly as partially verified rather than pretending it is fully stable
 
 What remains:
 
@@ -521,12 +513,6 @@ How that tradeoff was managed:
 There are several realistic next steps for this repo.
 
 - Fix the target app package structure so startup does not rely on an `app` symlink or junction.
-- Make the IDOR dashboard actions use the same exact path and semantics as the engine’s backend attack flow.
-- Stabilize the file upload scenario and strengthen server-side validation around missing files and upload directories.
-- Remove dead helpers and duplicate scoring logic from the attack engine.
-- Replace the hardcoded API key and secret key with environment-based configuration.
-- Add a proper `docs/` structure and archive stale audit files outside the repo root.
-- Expand the attack set with clearly separated future work such as SQL injection or XSS, but only after the current flows are stable.
 - Improve test automation so services can be started in a temporary test harness instead of assuming an already-running local stack.
 
 ## Acknowledgements
