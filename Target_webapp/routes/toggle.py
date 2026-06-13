@@ -1,6 +1,6 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect
+
 import app.config as config
-from flask import redirect, request
 from app.security.rate_limit import login_attempts
 
 toggle_bp = Blueprint('toggle', __name__)
@@ -21,10 +21,13 @@ def toggle():
 def toggle_ui():
     control = request.form.get("control")
 
+    if not hasattr(config, control):
+        return redirect(request.referrer or '/')
+
     current = getattr(config, control)
     setattr(config, control, not current)
 
-    return redirect(request.referrer)
+    return redirect(request.referrer or '/')
 
 @toggle_bp.route('/reset-rate-limit', methods=['POST'])
 def reset_rate_limit():

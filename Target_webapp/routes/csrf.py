@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, session, redirect, flash
+from flask import Blueprint, render_template, request, session, redirect
 import secrets
 import app.config as config
 from app.models.users import USERS
+from app.security.session_guard import has_valid_session_token
 
 csrf_bp = Blueprint('csrf', __name__)
 
@@ -13,6 +14,10 @@ csrf_bp = Blueprint('csrf', __name__)
 @csrf_bp.route('/transfer-page')
 def transfer_page():
     if 'user_id' not in session:
+        return redirect('/')
+
+    if not has_valid_session_token(session):
+        session.clear()
         return redirect('/')
 
     # Fetch logged-in user for balance display
@@ -40,6 +45,10 @@ def transfer_page():
 @csrf_bp.route('/transfer', methods=['POST'])
 def transfer():
     if 'user_id' not in session:
+        return redirect('/')
+
+    if not has_valid_session_token(session):
+        session.clear()
         return redirect('/')
 
     # =========================================

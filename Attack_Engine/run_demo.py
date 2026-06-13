@@ -72,7 +72,7 @@ ATTACK_REGISTRY = {
     "idor": {
         "fn": run_idor_attack,
         "attack_type": "IDOR Access",
-        "chaos_controls": ["RBAC_ENABLED"],
+        "chaos_controls": ["RBAC_ENABLED", "IDOR_PROTECTION"],
     },
     "command_injection": {
         "fn": run_command_injection,
