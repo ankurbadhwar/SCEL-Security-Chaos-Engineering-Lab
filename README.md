@@ -529,11 +529,6 @@ There are several realistic next steps for this repo.
 - Expand the attack set with clearly separated future work such as SQL injection or XSS, but only after the current flows are stable.
 - Improve test automation so services can be started in a temporary test harness instead of assuming an already-running local stack.
 
-## Contributors
-
-- Ankur — Project author and maintainer
-- Additional contributors — Assumption: add names and roles here if this repository was developed by a team
-
 ## Acknowledgements
 
 - Flask, for keeping each service simple and readable
@@ -541,4 +536,4 @@ There are several realistic next steps for this repo.
 - Pytest, for the integration test harness
 - OWASP guidance and common web security training material, which clearly influenced the choice of attack scenarios
 
-The repository also contains project report and presentation artifacts that helped document the original academic submission.
+
